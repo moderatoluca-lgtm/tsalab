@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>TSALab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: console ecografica gemella di MitraLab. Biforcazione animata a sinistra, comandi e misure a destra, Doppler pulsato sotto; poi atlanti, calcolatore, criteri, trappole, casi. Tema unico scuro, come lo schermo di un ecografo. */
+:root{
+  --bg:#0d1319;
+  --panel:#141c24;
+  --panel-2:#1a242e;
+  --line:#26333f;
+  --fg:#dfe7ec;
+  --muted:#8b9ba8;
+  --caliper:#f0c04a;
+  --link:#8fc3f0;
+  --ok:#6fbf8e;
+  --mid:#e3a43c;
+  --sev:#e2584c;
+  --screen:#05080b;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+a{color:var(--link)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding-block:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.04em}
+.brand span{color:var(--caliper)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav a{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:4px 10px;border-radius:4px}
+nav a:hover,nav a:focus-visible{color:var(--fg);background:var(--panel-2)}
+.intro{padding-block:28px 8px}
+.eyebrow{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--caliper)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(32px,5vw,50px);line-height:1.05;margin:6px 0 10px;text-wrap:balance}
+h2{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.4vw,34px);line-height:1.1;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:21px;line-height:1.15;margin:0;letter-spacing:.01em}
+.lede{max-width:70ch;font-size:17px;margin:0}
+.lede em{color:var(--muted)}
+section{padding-block:34px}
+section+section{border-top:1px solid var(--line)}
+.sub{color:var(--muted);max-width:72ch;margin:0 0 20px}
+
+.sim{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:940px){.sim{grid-template-columns:minmax(0,1fr)}}
+.screen{background:var(--screen);border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative}
+.screen canvas{display:block;width:100%;height:auto}
+.hud{position:absolute;left:10px;top:8px;font-family:var(--f-mono);font-size:11px;color:#9fb0bc;line-height:1.5;pointer-events:none}
+.hud b{color:var(--caliper);font-weight:600}
+.hud-r{left:auto;right:10px;text-align:right}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.field{display:flex;flex-direction:column;gap:6px}
+.lab{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.lab output{font-family:var(--f-mono);font-size:13px;letter-spacing:0;text-transform:none;color:var(--caliper)}
+input[type=range]{width:100%;accent-color:var(--caliper)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.seg.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg button,.toggles button,.btn{font-family:var(--f-body);font-size:14px;font-weight:600;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:7px 8px;cursor:pointer;text-align:center}
+.seg button small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.seg button[aria-pressed=true],.toggles button[aria-pressed=true],.btn[aria-pressed=true]{border-color:var(--caliper);color:var(--caliper);background:#221e12}
+.toggles{display:flex;gap:6px;flex-wrap:wrap}
+button:hover{border-color:#3b4b59}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid var(--caliper);outline-offset:2px}
+select{font-family:var(--f-body);font-size:14px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:7px 8px;width:100%;min-width:0}
+input[type=number]{font-family:var(--f-mono);font-size:14px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:4px;padding:6px 8px;width:100%;min-width:0}
+.cap{font-size:13px;color:var(--muted)}
+
+.dop{background:var(--screen);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-top:14px}
+.dop canvas{display:block;width:100%;height:auto}
+.dop .t{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line);font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:14px;flex-wrap:wrap}
+.dop .t span:last-child{font-family:var(--f-mono);text-transform:none;letter-spacing:0;color:var(--caliper);font-size:12px;font-weight:400}
+.dop p{margin:0;padding:8px 10px 10px;font-size:13px;color:var(--muted)}
+
+.readout{width:100%;border-collapse:collapse;font-size:14px}
+.readout th{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 6px 6px;border-bottom:1px solid var(--line)}
+.readout td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.readout td.v{font-family:var(--f-mono);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;white-space:nowrap;border:1px solid}
+.c-ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 55%,transparent);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.c-mid{color:var(--mid);border-color:color-mix(in srgb,var(--mid) 55%,transparent);background:color-mix(in srgb,var(--mid) 12%,transparent)}
+.c-sev{color:var(--sev);border-color:color-mix(in srgb,var(--sev) 55%,transparent);background:color-mix(in srgb,var(--sev) 12%,transparent)}
+.c-na{color:var(--muted);border-color:var(--line)}
+.verdict{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--panel-2);font-size:15px}
+.verdict b{font-family:var(--f-display);font-size:17px;letter-spacing:.03em}
+.warn{font-size:14px;border-left:2px solid var(--mid);padding-left:10px}
+.warn:empty{display:none}
+
+.atlas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.tile canvas{display:block;width:100%;height:auto;background:var(--screen)}
+.tile .b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px}
+.tile h3{font-size:18px}
+.tile p{margin:0;font-size:14px}
+.tile .k{font-family:var(--f-mono);font-size:12px;color:var(--caliper)}
+
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+.fgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,130px);gap:8px 12px;align-items:center;font-size:14px}
+.big{font-family:var(--f-display);font-weight:700;font-size:52px;line-height:1;font-variant-numeric:tabular-nums}
+.nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.nums .big{font-size:40px}
+@media (max-width:600px){.nums{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.num{background:var(--panel-2);border-radius:5px;padding:10px 12px;min-width:0}
+.num .k{font-size:12px;color:var(--muted);line-height:1.3}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table.grade{border-collapse:collapse;width:100%;min-width:620px;font-size:14px}
+table.grade th,table.grade td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;font-variant-numeric:tabular-nums}
+table.grade th{background:var(--panel);font-family:var(--f-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:13px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.card .n{font-family:var(--f-mono);font-size:24px;font-weight:600;color:var(--caliper)}
+.card p{margin:0;font-size:14px}
+.card .s{font-size:12.5px;color:var(--muted)}
+
+.pits{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+@media (max-width:420px){.pits{grid-template-columns:minmax(0,1fr)}}
+.pit{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;min-width:0}
+.pit h3{margin-bottom:10px}
+.pit ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.pit li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;font-size:14.5px;line-height:1.45}
+.tag{font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-top:2px;min-width:62px;text-align:center}
+.tag.trap{color:var(--sev);background:color-mix(in srgb,var(--sev) 14%,transparent)}
+.tag.tip{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.pit .src{margin-top:12px;font-size:12.5px;color:var(--muted)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:16px;align-items:center}
+
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:940px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0}
+.step .tagline{font-family:var(--f-display);font-weight:700;color:var(--caliper);font-size:15px;letter-spacing:.1em}
+.step ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+.step li{margin-bottom:4px}
+
+.cases{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:760px){.cases{grid-template-columns:minmax(0,1fr)}}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.case p{margin:0;font-size:15px}
+.case .vals{font-family:var(--f-mono);font-size:13px;color:var(--caliper)}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opts button{text-align:left;font-family:var(--f-body);font-size:14px;color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:8px 10px;cursor:pointer}
+.opts button.right{border-color:var(--ok);color:var(--ok)}
+.opts button.wrong{border-color:var(--sev);color:var(--sev)}
+.fb{font-size:14px;border-top:1px solid var(--line);padding-top:10px}
+.score{font-family:var(--f-mono);color:var(--caliper)}
+
+ol.refs{padding-left:22px;max-width:92ch;font-size:15px}
+ol.refs li{margin-bottom:8px}
+ol.refs a{word-break:break-all}
+.limits{max-width:76ch}
+.limits p{margin:0 0 12px}
+
+.caseimg{margin:0;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--screen)}
+.caseimg canvas{display:block;width:100%;height:auto}
+.caseimg figcaption{font-size:12.5px;color:var(--muted);padding:6px 10px;background:var(--panel-2);border-top:1px solid var(--line)}
+/* anatomia e classificazione della placca */
+.plates{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.plate{background:#ffffff;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:0}
+.plate img{display:block;width:100%;height:auto}
+.plate figcaption{background:var(--panel);color:var(--muted);font-size:13.5px;padding:8px 12px;border-top:1px solid var(--line)}
+.keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+@media (max-width:760px){.keys{grid-template-columns:minmax(0,1fr)}}
+.key{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font-size:14.5px;min-width:0}
+.key b{font-family:var(--f-display);font-size:17px;letter-spacing:.03em;display:block;margin-bottom:2px}
+.gw{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:1000px){.gw{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:620px){.gw{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.gw3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.05fr);gap:12px}
+@media (max-width:1000px){.gw3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.gw3{grid-template-columns:minmax(0,1fr)}}
+.gwt{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.gwt svg{display:block;width:100%;height:auto;background:var(--screen)}
+.gwt .b{padding:9px 11px 11px;display:flex;flex-direction:column;gap:2px}
+.gwt .n{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.03em}
+.gwt .d{font-size:14.5px}
+.gwt .h{font-size:13px;color:var(--muted)}
+.riskbar{margin:14px 0 4px;height:10px;border-radius:5px;background:linear-gradient(90deg,var(--sev),var(--mid),var(--ok))}
+.risklab{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13.5px;font-weight:700}
+.risklab span:first-child{color:var(--sev)} .risklab span:last-child{color:var(--ok)}
+.gwh{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+.report{background:var(--panel-2);border:1px solid var(--line);border-radius:6px;padding:14px;min-width:0;font-size:14.5px}
+.report b{font-family:var(--f-display);font-size:18px;color:var(--caliper);letter-spacing:.03em}
+.report ul{margin:8px 0 0;padding-left:18px}
+.report li{margin-bottom:4px}
+footer{padding-block:24px 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">TSA<span>Lab</span></div>
+    <nav aria-label="Sezioni">
+      <a href="#simulatore">Simulatore</a>
+      <a href="#anatomia">Anatomia</a>
+      <a href="#spettri">Spettri</a>
+      <a href="#placca">Placca</a>
+      <a href="#calcolo">NASCET/ECST</a>
+      <a href="#vertebrali">Vertebrali</a>
+      <a href="#criteri">Criteri</a>
+      <a href="#trucchi">Trappole</a>
+      <a href="#lineeguida">Linee guida</a>
+      <a href="#casi">Casi</a>
+      <a href="#fonti">Fonti</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap intro">
+  <div class="eyebrow">Eco color Doppler dei tronchi sovraortici</div>
+  <h1>Leggere una stenosi carotidea senza farsi ingannare</h1>
+  <p class="lede">Muovi il grado di stenosi, il tipo di placca, l'angolo e il cuore del paziente: la biforcazione, il color Doppler e lo spettro cambiano insieme, e la tabella ti dice cosa classificherebbero i criteri SRU e IAC. Più sotto trovi gli spettri "cardiaci", la galleria delle placche, il calcolatore NASCET contro ECST con il rimodellamento, il furto della succlavia, i criteri, le trappole e i casi. <em>Modello didattico: le velocità sono interpolate dalle soglie pubblicate, non calcolate da un modello emodinamico.</em></p>
+</div>
+
+<section id="simulatore">
+  <div class="wrap">
+    <h2>Simulatore della biforcazione</h2>
+    <p class="sub">Si parte da una stenosi del 75% NASCET con placca disomogenea. Prova tre cose: porta l'angolo oltre 60 gradi e sposta il cursore di 10 gradi; accendi l'occlusione controlaterale; scegli la stenosi aortica severa. Nel bulbo normale vedrai anche la piccola area blu di flusso invertito sulla parete posteriore: è fisiologica.</p>
+    <div class="sim">
+      <div>
+        <div class="screen">
+          <canvas id="bif" width="640" height="380" aria-label="Biforcazione carotidea longitudinale animata con color Doppler"></canvas>
+          <div class="hud">Lineare 9 MHz · sezione longitudinale<br>Scala colore <b id="hudNyq">±50</b> cm/s · steer 20°<br>Campione: <b id="hudGate">stenosi</b></div>
+          <div class="hud hud-r" id="hudCond">Cuore normale</div>
+        </div>
+        <div class="dop">
+          <div class="t"><span>Doppler pulsato</span><span id="pwLab"></span></div>
+          <canvas id="pw" width="640" height="210" aria-label="Spettro Doppler pulsato nel punto campionato"></canvas>
+          <p id="pwNote">Lo spettro scorre da sinistra a destra. Finestra spettrale libera sotto la curva significa flusso laminare; se si riempie, il flusso è disturbato.</p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="ctrl">
+          <div class="field">
+            <div class="lab"><label for="sten">Stenosi vera (NASCET)</label><output id="stenOut">75%</output></div>
+            <input id="sten" type="range" min="0" max="100" step="1" value="75">
+            <div class="toggles" id="stenQuick">
+              <button type="button" class="btn" data-n="0">0</button>
+              <button type="button" class="btn" data-n="40">40%</button>
+              <button type="button" class="btn" data-n="60">60%</button>
+              <button type="button" class="btn" data-n="85">85%</button>
+              <button type="button" class="btn" data-n="97">Pre-occlusione</button>
+              <button type="button" class="btn" data-n="100">Occlusione</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lab"><span>Placca</span></div>
+            <div class="seg" id="ptype">
+              <button type="button" data-v="hypo" aria-pressed="false">Ipoecogena<small>lipidi, emorragia</small></button>
+              <button type="button" data-v="hyper" aria-pressed="false">Fibrosa<small>iperecogena</small></button>
+              <button type="button" data-v="calc" aria-pressed="false">Calcifica<small>cono d'ombra</small></button>
+              <button type="button" data-v="het" aria-pressed="true">Disomogenea<small>mista</small></button>
+              <button type="button" data-v="ulc" aria-pressed="false">Ulcerata<small>cratere</small></button>
+              <button type="button" data-v="web" aria-pressed="false">Carotid web<small>membrana</small></button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lab"><label for="cond">Cuore e circolo</label></div>
+            <select id="cond">
+              <option value="normal">Cuore normale</option>
+              <option value="as">Stenosi aortica severa</option>
+              <option value="low">Bassa portata (FE ridotta)</option>
+              <option value="ar">Insufficienza aortica severa</option>
+              <option value="hocm">Cardiomiopatia ipertrofica ostruttiva</option>
+              <option value="af">Fibrillazione atriale</option>
+              <option value="alt">Polso alternante</option>
+              <option value="lvad">LVAD a flusso continuo</option>
+              <option value="hyper">Stato iperdinamico (anemia, febbre)</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="lab"><span>Punto campionato col Doppler pulsato</span></div>
+            <div class="seg" id="gate">
+              <button type="button" data-v="cca" aria-pressed="false">Comune</button>
+              <button type="button" data-v="pre" aria-pressed="false">Pre-stenosi</button>
+              <button type="button" data-v="th" aria-pressed="true">Stenosi</button>
+              <button type="button" data-v="post" aria-pressed="false">Post-stenosi</button>
+              <button type="button" data-v="dist" aria-pressed="false">Interna distale</button>
+              <button type="button" data-v="eca" aria-pressed="false">Esterna</button>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lab"><label for="ang">Angolo di insonazione</label><output id="angOut">60°</output></div>
+            <input id="ang" type="range" min="40" max="75" step="1" value="60">
+          </div>
+          <div class="field">
+            <div class="lab"><label for="err">Errore del cursore d'angolo</label><output id="errOut">0°</output></div>
+            <input id="err" type="range" min="-15" max="15" step="1" value="0">
+          </div>
+          <div class="field">
+            <div class="lab"><label for="nyq">Scala colore</label><output id="nyqOut">±50 cm/s</output></div>
+            <input id="nyq" type="range" min="10" max="90" step="1" value="50">
+          </div>
+          <div class="toggles">
+            <button type="button" id="tColor" aria-pressed="true">Color Doppler</button>
+            <button type="button" id="tRemod" aria-pressed="false">Rimodellamento positivo</button>
+            <button type="button" id="tContra" aria-pressed="false">Occlusione controlaterale</button>
+            <button type="button" id="tPlay" aria-pressed="true">Pausa</button>
+          </div>
+        </div>
+        <div class="ctrl">
+          <table class="readout" aria-live="polite">
+            <thead><tr><th>Misura</th><th>Misurata</th><th>Vera</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div class="verdict" id="verdict"></div>
+          <div class="warn" id="warn"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="anatomia">
+  <div class="wrap">
+    <h2>Anatomia in asse lungo e asse corto</h2>
+    <p class="sub">Stesso orientamento in tutte le tavole e nel simulatore: flusso verso sinistra, ICA sempre in basso perché profonda, ECA sempre in alto perché superficiale. In asse corto, collo destro con repere verso la destra del paziente.</p>
+    <div class="plates">
+      <figure class="plate"><img alt="Asse lungo schematico della biforcazione carotidea destra: CCA a destra, ICA in basso con il bulbo, ECA in alto con l'arteria tiroidea superiore, vena giugulare interna superficiale, flusso verso sinistra" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAwIDkwMCIgd2lkdGg9IjE2MDAiIGhlaWdodD0iOTAwIiBmb250LWZhbWlseT0iTGliZXJhdGlvbiBTYW5zLCBBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0ibHVtIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAiIHkxPSIzMzAiIHgyPSIwIiB5Mj0iNzAwIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZTg3MDVmIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMC40NSIgc3RvcC1jb2xvcj0iI2QwNDczYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNhODMwMmEiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InZlaW4iIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMCIgeTE9IjMwMCIgeDI9IjAiIHkyPSIzNzIiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3ZjlmZDYiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjM2Y2M2E4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJtdXNjbGUiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZDlhMjk0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M3ODg3OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icHJvYmUiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjOWFhNGFkIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVkNjc3MCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxwYXR0ZXJuIGlkPSJmaWJlcnMiIHdpZHRoPSI2MCIgaGVpZ2h0PSIxOCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKC00KSI+CiAgICAgIDxwYXRoIGQ9Ik0wIDkgSDYwIiBzdHJva2U9IiNiOTc1NjYiIHN0cm9rZS13aWR0aD0iMS4yIiBvcGFjaXR5PSIuNDUiLz4KICAgIDwvcGF0dGVybj4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0iZmFkZSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSI3NjAiIHkxPSIwIiB4Mj0iMTAyMCIgeTI9IjAiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzAwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2ZmZiIvPjwvbGluZWFyR3JhZGllbnQ+CiAgICA8bWFya2VyIGlkPSJhaCIgdmlld0JveD0iMCAwIDEwIDEwIiByZWZYPSI1IiByZWZZPSI1IiBtYXJrZXJXaWR0aD0iNSIgbWFya2VySGVpZ2h0PSI1IiBvcmllbnQ9ImF1dG8tc3RhcnQtcmV2ZXJzZSI+CiAgICAgIDxwYXRoIGQ9Ik0wIDAgTDEwIDUgTDAgMTAgeiIgZmlsbD0iI2ZmZmZmZiIvPgogICAgPC9tYXJrZXI+CiAgICA8bWFya2VyIGlkPSJsZWFkIiB2aWV3Qm94PSIwIDAgMTAgMTAiIHJlZlg9IjUiIHJlZlk9IjUiIG1hcmtlcldpZHRoPSI0IiBtYXJrZXJIZWlnaHQ9IjQiPgogICAgICA8Y2lyY2xlIGN4PSI1IiBjeT0iNSIgcj0iNCIgZmlsbD0iIzJiMmIyYiIvPgogICAgPC9tYXJrZXI+CiAgPC9kZWZzPgoKICA8cmVjdCB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIGZpbGw9IiNmZmZmZmYiLz4KCiAgPCEtLSB0ZXNzdXRpIC0tPgogIDxyZWN0IHg9IjgwIiB5PSIxNTAiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjE2IiBmaWxsPSIjZjFkM2JmIi8+CiAgPHJlY3QgeD0iODAiIHk9IjE2NiIgd2lkdGg9IjE0NDAiIGhlaWdodD0iNDQiIGZpbGw9IiNmN2VjZDIiLz4KICA8cGF0aCBkPSJNODAgMjEwIEMgNTAwIDIwMCwgMTAwMCAyMjIsIDE1MjAgMjEyIEwxNTIwIDMwMCBDIDEwMDAgMzEyLCA1MjAgMjkwLCA4MCAzMDAgWiIgZmlsbD0idXJsKCNtdXNjbGUpIi8+CiAgPHBhdGggZD0iTTgwIDIxMCBDIDUwMCAyMDAsIDEwMDAgMjIyLCAxNTIwIDIxMiBMMTUyMCAzMDAgQyAxMDAwIDMxMiwgNTIwIDI5MCwgODAgMzAwIFoiIGZpbGw9InVybCgjZmliZXJzKSIvPgogIDxyZWN0IHg9IjgwIiB5PSIzMDAiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjUwMCIgZmlsbD0iI2Y2ZWZlOSIvPgogIDxyZWN0IHg9IjgwIiB5PSI3MzAiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjcwIiBmaWxsPSIjZTdkZGQzIi8+CgogIDwhLS0gc29uZGEgbGluZWFyZSAtLT4KICA8cmVjdCB4PSI0NzAiIHk9IjcwIiB3aWR0aD0iNjYwIiBoZWlnaHQ9IjcwIiByeD0iMTgiIGZpbGw9InVybCgjcHJvYmUpIi8+CiAgPHJlY3QgeD0iNDkwIiB5PSIxMzIiIHdpZHRoPSI2MjAiIGhlaWdodD0iMTQiIHJ4PSI0IiBmaWxsPSIjM2I0MzRhIi8+CiAgPHBhdGggZD0iTTgwMCA3MCBDIDgwMCA0MCwgODIwIDI1LCA4NjAgMTgiIHN0cm9rZT0iIzVkNjc3MCIgc3Ryb2tlLXdpZHRoPSIxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHRleHQgeD0iODAwIiB5PSIxMTMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjIiIGZpbGw9IiNmZmZmZmYiIGZvbnQtd2VpZ2h0PSI3MDAiIGxldHRlci1zcGFjaW5nPSIyIj5TT05EQSBMSU5FQVJFPC90ZXh0PgogIDxwYXRoIGQ9Ik00OTAgMTQ2IEw0OTAgODAwIE0xMTEwIDE0NiBMMTExMCA4MDAiIHN0cm9rZT0iIzlhYTRhZCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1kYXNoYXJyYXk9IjYgOCIvPgoKICA8IS0tIHZlbmEgZ2l1Z3VsYXJlIGludGVybmEsIHN1cGVyZmljaWFsZSAtLT4KICA8bWFzayBpZD0iaWp2bSIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeD0iMCIgeT0iMCIgd2lkdGg9IjE2MDAiIGhlaWdodD0iOTAwIj48cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIGZpbGw9InVybCgjZmFkZSkiLz48L21hc2s+CiAgPGcgbWFzaz0idXJsKCNpanZtKSI+PHBhdGggZD0iTTE1MjAgMzQwIEMgMTMwMCAzMzYsIDEwNTAgMzM2LCA3NjAgMzI4IiBzdHJva2U9IiMyZTRmOGYiIHN0cm9rZS13aWR0aD0iNjYiIGZpbGw9Im5vbmUiLz4KICA8cGF0aCBkPSJNMTUyMCAzNDAgQyAxMzAwIDMzNiwgMTA1MCAzMzYsIDc2MCAzMjgiIHN0cm9rZT0idXJsKCN2ZWluKSIgc3Ryb2tlLXdpZHRoPSI1NiIgZmlsbD0ibm9uZSIvPjwvZz4KCiAgPCEtLSBwYXJldGkgYXJ0ZXJpb3NlIChzdHJhdG8gZXN0ZXJubykgLS0+CiAgPGcgc3Ryb2tlPSIjN2ExZjFjIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiPgogICAgPHBhdGggZD0iTTE1MjAgNDkwIEwgNzcwIDQ5MCIgc3Ryb2tlLXdpZHRoPSIxMTAiLz4KICAgIDxwYXRoIGQ9Ik03OTAgNTA1IEMgNjQwIDUyMCwgNDIwIDU2NSwgODAgNjQwIiBzdHJva2Utd2lkdGg9IjkyIi8+CiAgICA8cGF0aCBkPSJNNzkwIDQ3MCBDIDY1MCA0NDAsIDQzMCA0MDAsIDgwIDM3MiIgc3Ryb2tlLXdpZHRoPSI3MiIvPgogICAgPHBhdGggZD0iTTcyMCA0NTIgQyA3NzAgNDI2LCA4MzAgNDEyLCA5MzAgNDA4IiBzdHJva2Utd2lkdGg9IjIyIi8+CiAgPC9nPgogIDxlbGxpcHNlIGN4PSI3MDAiIGN5PSI1MzUiIHJ4PSIxMzAiIHJ5PSI3NCIgZmlsbD0iIzdhMWYxYyIgdHJhbnNmb3JtPSJyb3RhdGUoMTAgNzAwIDUzNSkiLz4KCiAgPCEtLSBsdW1pIC0tPgogIDxnIHN0cm9rZT0idXJsKCNsdW0pIiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiPgogICAgPHBhdGggZD0iTTE1MjAgNDkwIEwgNzcwIDQ5MCIgc3Ryb2tlLXdpZHRoPSI5MiIvPgogICAgPHBhdGggZD0iTTc5MCA1MDUgQyA2NDAgNTIwLCA0MjAgNTY1LCA4MCA2NDAiIHN0cm9rZS13aWR0aD0iNzYiLz4KICAgIDxwYXRoIGQ9Ik03OTAgNDcwIEMgNjUwIDQ0MCwgNDMwIDQwMCwgODAgMzcyIiBzdHJva2Utd2lkdGg9IjU4Ii8+CiAgICA8cGF0aCBkPSJNNzIwIDQ1MiBDIDc3MCA0MjYsIDgzMCA0MTIsIDkzMCA0MDgiIHN0cm9rZS13aWR0aD0iMTIiLz4KICA8L2c+CiAgPGVsbGlwc2UgY3g9IjcwMCIgY3k9IjUzNSIgcng9IjExNyIgcnk9IjYxIiBmaWxsPSJ1cmwoI2x1bSkiIHRyYW5zZm9ybT0icm90YXRlKDEwIDcwMCA1MzUpIi8+CiAgPCEtLSByaWZsZXNzbyAtLT4KICA8ZyBzdHJva2U9IiNmNmIyYTYiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iLjciPgogICAgPHBhdGggZD0iTTE1MDAgNDYyIEwgODQwIDQ2MiIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgICA8cGF0aCBkPSJNNzYwIDQ0NiBDIDY0MCA0MjUsIDQzMCAzOTAsIDEwMCAzNjAiIHN0cm9rZS13aWR0aD0iNSIvPgogIDwvZz4KICA8IS0tIHRhZ2xpIHB1bGl0aSBhaSBib3JkaSBkZWwgY2FtcG8gLS0+CiAgPHJlY3QgeD0iMCIgeT0iMTQwIiB3aWR0aD0iODAiIGhlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIi8+CiAgPHJlY3QgeD0iMTUyMCIgeT0iMTQwIiB3aWR0aD0iODAiIGhlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIi8+CgogIDwhLS0gZnJlY2NlIGRpIGZsdXNzbyB2ZXJzbyBzaW5pc3RyYSAtLT4KICA8ZyBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNSIgZmlsbD0ibm9uZSIgbWFya2VyLWVuZD0idXJsKCNhaCkiIG9wYWNpdHk9Ii45NSI+CiAgICA8cGF0aCBkPSJNMTM4MCA0OTAgTCAxMTgwIDQ5MCIvPgogICAgPHBhdGggZD0iTTEwNjAgNDkwIEwgOTAwIDQ5MCIvPgogICAgPHBhdGggZD0iTTQ4MCA1NzYgQyA0MDAgNTk0LCAzMzAgNjEwLCAyMzAgNjMyIi8+CiAgICA8cGF0aCBkPSJNNDgwIDQxNCBDIDQwMCA0MDQsIDMzMCAzOTYsIDIzMCAzODYiLz4KICA8L2c+CgogIDwhLS0gZXRpY2hldHRlIC0tPgogIDxnIGZvbnQtc2l6ZT0iMzAiIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiMxZjFmMWYiPgogICAgPHRleHQgeD0iMTMwMCIgeT0iNjEwIj5DQ0E8L3RleHQ+CiAgICA8dGV4dCB4PSIxNTAiIHk9IjcyMCI+SUNBPC90ZXh0PgogICAgPHRleHQgeD0iMTIwIiB5PSIzNzkiIGZpbGw9IiNmZmZmZmYiIGZvbnQtc2l6ZT0iMjYiPkVDQTwvdGV4dD4KICAgIDx0ZXh0IHg9IjEzMDAiIHk9IjI2MiIgZmlsbD0iI2ZmZmZmZiI+U0NNPC90ZXh0PgogIDwvZz4KICA8ZyBmb250LXNpemU9IjIwIiBmaWxsPSIjM2EzYTNhIj4KICAgIDx0ZXh0IHg9IjEzMDAiIHk9IjYzOCI+Y2Fyb3RpZGUgY29tdW5lPC90ZXh0PgogICAgPHRleHQgeD0iMTUwIiB5PSI3NDgiPmNhcm90aWRlIGludGVybmE6IHByb2ZvbmRhLCBwacO5IGdyYW5kZSwgc2VuemEgcmFtaSBuZWwgY29sbG88L3RleHQ+CiAgICA8dGV4dCB4PSIxMzAwIiB5PSIyOTAiIGZpbGw9IiNmZmZmZmYiPnN0ZXJub2NsZWlkb21hc3RvaWRlbzwvdGV4dD4KICA8L2c+CiAgPGcgc3Ryb2tlPSIjMmIyYjJiIiBzdHJva2Utd2lkdGg9IjEuNiIgZmlsbD0ibm9uZSI+CiAgICA8cGF0aCBkPSJNMTUwIDI2OCBMIDE1MCAyNjgiLz4KICAgIDxwYXRoIGQ9Ik03MDAgNjIwIEwgNzYwIDY5MCBMIDkwMCA2OTAiIG1hcmtlci1zdGFydD0idXJsKCNsZWFkKSIvPgogICAgPHBhdGggZD0iTTkyNSA0MDggTCA5NjAgNDE0IEwgOTkwIDQxNCIgbWFya2VyLXN0YXJ0PSJ1cmwoI2xlYWQpIi8+CiAgICA8cGF0aCBkPSJNMzMwIDM5MiBMIDMzMCAyMzYiIG1hcmtlci1zdGFydD0idXJsKCNsZWFkKSIvPgogICAgCiAgPC9nPgogIDxnIGZvbnQtc2l6ZT0iMjIiIGZpbGw9IiMxZjFmMWYiPgogICAgPHRleHQgeD0iOTEwIiB5PSI2OTciPjx0c3BhbiBmb250LXdlaWdodD0iNzAwIj5CdWxibyBjYXJvdGlkZW88L3RzcGFuPjogcGnDuSBsYXJnbywgYWxsJ29yaWdpbmUgZGVsbGEgSUNBPC90ZXh0PgogICAgPHRleHQgeD0iOTk4IiB5PSI0MjEiIGZvbnQtc2l6ZT0iMjEiPjx0c3BhbiBmb250LXdlaWdodD0iNzAwIj5BLiB0aXJvaWRlYSBzdXBlcmlvcmU8L3RzcGFuPjogcHJpbW8gcmFtbyBkZWxsYSBFQ0E8L3RleHQ+CiAgICA8dGV4dCB4PSIyNTAiIHk9IjIyOCI+PHRzcGFuIGZvbnQtd2VpZ2h0PSI3MDAiPkVDQTwvdHNwYW4+OiBzdXBlcmZpY2lhbGUsIHBpw7kgcGljY29sYSwgY29uIHJhbWk8L3RleHQ+CiAgICA8dGV4dCB4PSIxMTgwIiB5PSIzNDgiIGZpbGw9IiNmZmZmZmYiIGZvbnQtc2l6ZT0iMjEiPjx0c3BhbiBmb250LXdlaWdodD0iNzAwIj5WR0k8L3RzcGFuPiB2ZW5hIGdpdWd1bGFyZSBpbnRlcm5hPC90ZXh0PgogIDwvZz4KCiAgPCEtLSBvcmllbnRhbWVudG8gLS0+CiAgPGcgZm9udC1zaXplPSIyMiIgZmlsbD0iIzVhNWE1YSIgZm9udC13ZWlnaHQ9IjcwMCIgbGV0dGVyLXNwYWNpbmc9IjEuNSI+CiAgICA8dGV4dCB4PSI4MCIgeT0iODQ1Ij7il4AgQ1JBTklBTEUgKHRlc3RhKTwvdGV4dD4KICAgIDx0ZXh0IHg9IjE1MjAiIHk9Ijg0NSIgdGV4dC1hbmNob3I9ImVuZCI+Q0FVREFMRSDilrY8L3RleHQ+CiAgICA8dGV4dCB4PSI0MCIgeT0iMjAwIiB0cmFuc2Zvcm09InJvdGF0ZSgtOTAgNDAgMjAwKSIgdGV4dC1hbmNob3I9ImVuZCI+U1VQRVJGSUNJQUxFPC90ZXh0PgogICAgPHRleHQgeD0iNDAiIHk9Ijc5MCIgdHJhbnNmb3JtPSJyb3RhdGUoLTkwIDQwIDc5MCkiIHRleHQtYW5jaG9yPSJzdGFydCI+UFJPRk9ORE88L3RleHQ+CiAgPC9nPgogIDx0ZXh0IHg9IjgwMCIgeT0iODgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjIwIiBmaWxsPSIjN2E3YTdhIj5Bc3NlIGx1bmdvIGRlbGxhIGJpZm9yY2F6aW9uZSBkZXN0cmEuIEZsdXNzbyBkYSBkZXN0cmEgYSBzaW5pc3RyYTsgSUNBIHNlbXByZSBpbiBiYXNzbywgRUNBIHNlbXByZSBpbiBhbHRvLiBTY2hlbWEgbm9uIGluIHNjYWxhLjwvdGV4dD4KPC9zdmc+Cg=="><figcaption>Asse lungo. La ICA nasce dal bulbo ed è senza rami nel collo; il primo ramo dell'ECA è la tiroidea superiore.</figcaption></figure>
+      <figure class="plate"><img alt="Asse corto schematico del collo destro a livello della carotide comune e della biforcazione: vena giugulare laterale, ICA profonda e posterolaterale, ECA superficiale e anteromediale" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAwIDkwMCIgd2lkdGg9IjE2MDAiIGhlaWdodD0iOTAwIiBmb250LWZhbWlseT0iTGliZXJhdGlvbiBTYW5zLCBBcmlhbCwgSGVsdmV0aWNhLCBzYW5zLXNlcmlmIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0ibHVtIiBjeD0iMC40MiIgY3k9IjAuMzYiIHI9IjAuNyI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2VlODA3MCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjAuNTUiIHN0b3AtY29sb3I9IiNkMDQ3M2EiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjOWUyYjI2Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPHJhZGlhbEdyYWRpZW50IGlkPSJ2ZWluIiBjeD0iMC40MiIgY3k9IjAuMzYiIHI9IjAuNzUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4ZWFlZTIiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjM2I1ZmE0Ii8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJtdXNjbGUiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZDlhMjk0Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M3ODg3OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxsaW5lYXJHcmFkaWVudCBpZD0icHJvYmUiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjOWFhNGFkIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzVkNjc3MCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0idGh5IiBjeD0iMC40IiBjeT0iMC4zNSIgcj0iMC44Ij4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZTliOWE4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2M5OGQ3YiIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KICAgIDxwYXR0ZXJuIGlkPSJmaWJlcnMiIHdpZHRoPSI0MCIgaGVpZ2h0PSIxNCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxwYXRoIGQ9Ik0wIDcgSDQwIiBzdHJva2U9IiNiOTc1NjYiIHN0cm9rZS13aWR0aD0iMS4xIiBvcGFjaXR5PSIuNDUiLz4KICAgIDwvcGF0dGVybj4KICAgIDxtYXJrZXIgaWQ9ImxlYWQiIHZpZXdCb3g9IjAgMCAxMCAxMCIgcmVmWD0iNSIgcmVmWT0iNSIgbWFya2VyV2lkdGg9IjQiIG1hcmtlckhlaWdodD0iNCI+CiAgICAgIDxjaXJjbGUgY3g9IjUiIGN5PSI1IiByPSI0IiBmaWxsPSIjMmIyYjJiIi8+CiAgICA8L21hcmtlcj4KICAgIDxjbGlwUGF0aCBpZD0icEEiPjxyZWN0IHg9IjQwIiB5PSIxNTAiIHdpZHRoPSI3NDAiIGhlaWdodD0iNjQwIiByeD0iMTQiLz48L2NsaXBQYXRoPgogICAgPGNsaXBQYXRoIGlkPSJwQiI+PHJlY3QgeD0iODIwIiB5PSIxNTAiIHdpZHRoPSI3NDAiIGhlaWdodD0iNjQwIiByeD0iMTQiLz48L2NsaXBQYXRoPgogICAgPGcgaWQ9ImZpZWxkIj4KICAgICAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9Ijc0MCIgaGVpZ2h0PSI2NDAiIGZpbGw9IiNmNmVmZTkiLz4KICAgICAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9Ijc0MCIgaGVpZ2h0PSIxNCIgZmlsbD0iI2YxZDNiZiIvPgogICAgICA8cmVjdCB4PSIwIiB5PSIxNCIgd2lkdGg9Ijc0MCIgaGVpZ2h0PSIzOCIgZmlsbD0iI2Y3ZWNkMiIvPgogICAgICA8cmVjdCB4PSIwIiB5PSI1NjAiIHdpZHRoPSI3NDAiIGhlaWdodD0iODAiIGZpbGw9IiNlN2RkZDMiLz4KICAgIDwvZz4KICA8L2RlZnM+CgogIDxyZWN0IHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjkwMCIgZmlsbD0iI2ZmZmZmZiIvPgoKICA8IS0tIHRpdG9saSBwYW5uZWxsaSAtLT4KICA8ZyBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMWYxZjFmIj4KICAgIDx0ZXh0IHg9IjQwIiB5PSI2MCI+QSDCtyBMaXZlbGxvIGRlbGxhIGNhcm90aWRlIGNvbXVuZTwvdGV4dD4KICAgIDx0ZXh0IHg9IjgyMCIgeT0iNjAiPkIgwrcgTGl2ZWxsbyBkZWxsYSBiaWZvcmNhemlvbmU8L3RleHQ+CiAgPC9nPgoKICA8IS0tIHNvbmRlIC0tPgogIDxnPgogICAgPHJlY3QgeD0iMTcwIiB5PSI4OCIgd2lkdGg9IjQ4MCIgaGVpZ2h0PSI1NCIgcng9IjE2IiBmaWxsPSJ1cmwoI3Byb2JlKSIvPgogICAgPHJlY3QgeD0iMTg2IiB5PSIxMzYiIHdpZHRoPSI0NDgiIGhlaWdodD0iMTIiIHJ4PSI0IiBmaWxsPSIjM2I0MzRhIi8+CiAgICA8Y2lyY2xlIGN4PSIxOTYiIGN5PSIxMTUiIHI9IjkiIGZpbGw9IiNmMGMwNGEiLz4KICAgIDxyZWN0IHg9Ijk1MCIgeT0iODgiIHdpZHRoPSI0ODAiIGhlaWdodD0iNTQiIHJ4PSIxNiIgZmlsbD0idXJsKCNwcm9iZSkiLz4KICAgIDxyZWN0IHg9Ijk2NiIgeT0iMTM2IiB3aWR0aD0iNDQ4IiBoZWlnaHQ9IjEyIiByeD0iNCIgZmlsbD0iIzNiNDM0YSIvPgogICAgPGNpcmNsZSBjeD0iOTc2IiBjeT0iMTE1IiByPSI5IiBmaWxsPSIjZjBjMDRhIi8+CiAgICA8dGV4dCB4PSIyMTUiIHk9IjEyMiIgZm9udC1zaXplPSIxNyIgZmlsbD0iI2ZmZmZmZiIgZm9udC13ZWlnaHQ9IjcwMCI+cmVwZXJlIOKGkiBkZXN0cmEgZGVsIHBhemllbnRlPC90ZXh0PgogICAgPHRleHQgeD0iOTk1IiB5PSIxMjIiIGZvbnQtc2l6ZT0iMTciIGZpbGw9IiNmZmZmZmYiIGZvbnQtd2VpZ2h0PSI3MDAiPnJlcGVyZSDihpIgZGVzdHJhIGRlbCBwYXppZW50ZTwvdGV4dD4KICA8L2c+CgogIDwhLS0gUEFOTkVMTE8gQSAtLT4KICA8ZyBjbGlwLXBhdGg9InVybCgjcEEpIj4KICAgIDx1c2UgaHJlZj0iI2ZpZWxkIiB4PSI0MCIgeT0iMTUwIi8+CiAgICA8IS0tIFNDTSAtLT4KICAgIDxwYXRoIGQ9Ik00MCAyMDIgQyAyMDAgMTk2LCA0MjAgMjAwLCA2MDAgMjE0IEMgNTIwIDI2MiwgMzAwIDI3MiwgNDAgMjYyIFoiIGZpbGw9InVybCgjbXVzY2xlKSIvPgogICAgPHBhdGggZD0iTTQwIDIwMiBDIDIwMCAxOTYsIDQyMCAyMDAsIDYwMCAyMTQgQyA1MjAgMjYyLCAzMDAgMjcyLCA0MCAyNjIgWiIgZmlsbD0idXJsKCNmaWJlcnMpIi8+CiAgICA8IS0tIHRpcm9pZGUgZSB0cmFjaGVhIC0tPgogICAgPHBhdGggZD0iTTU2MCAzMDAgQyA2MTAgMjgwLCA2OTAgMzAwLCA3MjAgMzQwIEMgNzQwIDQwMCwgNzEwIDQ3MCwgNjUwIDQ4MCBDIDYwMCA0ODYsIDU2MCA0NTAsIDU1MiA0MDAgQyA1NDYgMzYwLCA1NDAgMzIwLCA1NjAgMzAwIFoiIGZpbGw9InVybCgjdGh5KSIvPgogICAgPHBhdGggZD0iTTc5MCAzMzAgQSAxMjAgMTIwIDAgMCAwIDc5MCA1NzAiIHN0cm9rZT0iI2I5YzBjNiIgc3Ryb2tlLXdpZHRoPSIyMiIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTc5MCAzNTIgQSA5OCA5OCAwIDAgMCA3OTAgNTQ4IiBmaWxsPSIjZTllZGYwIi8+CiAgICA8IS0tIHZlbmEgZ2l1Z3VsYXJlIC0tPgogICAgPGVsbGlwc2UgY3g9IjIxNSIgY3k9IjM0NSIgcng9Ijg4IiByeT0iNTAiIGZpbGw9IiMyZTRmOGYiLz4KICAgIDxlbGxpcHNlIGN4PSIyMTUiIGN5PSIzNDUiIHJ4PSI4MCIgcnk9IjQzIiBmaWxsPSJ1cmwoI3ZlaW4pIi8+CiAgICA8IS0tIGNhcm90aWRlIGNvbXVuZSAtLT4KICAgIDxjaXJjbGUgY3g9IjQwMCIgY3k9IjQyMCIgcj0iNjQiIGZpbGw9IiM3YTFmMWMiLz4KICAgIDxjaXJjbGUgY3g9IjQwMCIgY3k9IjQyMCIgcj0iNTUiIGZpbGw9InVybCgjbHVtKSIvPgogICAgPCEtLSB2YWdvIC0tPgogICAgPGNpcmNsZSBjeD0iMzAwIiBjeT0iNDU1IiByPSIxMyIgZmlsbD0iI2U4YzQ1YSIgc3Ryb2tlPSIjYjk5NTJlIiBzdHJva2Utd2lkdGg9IjIiLz4KICAgIDwhLS0gbXVzY29sbyBsdW5nbyBkZWwgY29sbG8gZSBwcm9jZXNzbyB0cmFzdmVyc28gLS0+CiAgICA8cGF0aCBkPSJNMzAwIDYwMCBDIDM4MCA1NjAsIDUyMCA1NjAsIDYyMCA2MDAgTCA2MjAgNjQwIEwgMzAwIDY0MCBaIiBmaWxsPSIjY2Y5YjhiIi8+CiAgICA8cGF0aCBkPSJNMTUwIDY0MCBDIDE3MCA2MDAsIDI0MCA1OTAsIDI5MCA2MTAgTCAzMDAgNjQwIFoiIGZpbGw9IiNkOGQyYzgiIHN0cm9rZT0iI2JmYjZhOSIgc3Ryb2tlLXdpZHRoPSIyIi8+CiAgPC9nPgogIDxyZWN0IHg9IjQwIiB5PSIxNTAiIHdpZHRoPSI3NDAiIGhlaWdodD0iNjQwIiByeD0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4ZDhkOCIgc3Ryb2tlLXdpZHRoPSIyIi8+CgogIDwhLS0gZXRpY2hldHRlIEEgLS0+CiAgPGcgc3Ryb2tlPSIjMmIyYjJiIiBzdHJva2Utd2lkdGg9IjEuNiIgZmlsbD0ibm9uZSI+CiAgICA8cGF0aCBkPSJNNDAwIDQ4NCBMIDQwMCA2OTAgTCA0MzAgNjkwIiBtYXJrZXItc3RhcnQ9InVybCgjbGVhZCkiLz4KICAgIDxwYXRoIGQ9Ik0yMTUgMzg4IEwgMTIwIDUyMCBMIDcwIDUyMCIgbWFya2VyLXN0YXJ0PSJ1cmwoI2xlYWQpIi8+CiAgICAKICAgIAogIDwvZz4KICA8ZyBmb250LXNpemU9IjI0IiBmaWxsPSIjMWYxZjFmIj4KICAgIDx0ZXh0IHg9IjQzNiIgeT0iNjk4IiBmb250LXdlaWdodD0iNzAwIj5DQ0E8L3RleHQ+CiAgICA8dGV4dCB4PSI0MzYiIHk9IjcyNiIgZm9udC1zaXplPSIxOSIgZmlsbD0iIzNhM2EzYSI+cm90b25kYSwgcHVsc2F0aWxlLCBub24gY29tcHJpbWliaWxlPC90ZXh0PgogICAgPHRleHQgeD0iNjQiIHk9IjU1MiIgZm9udC13ZWlnaHQ9IjcwMCIgdGV4dC1hbmNob3I9InN0YXJ0Ij5WR0k8L3RleHQ+CiAgICA8dGV4dCB4PSI2NCIgeT0iNTc4IiBmb250LXNpemU9IjE5IiBmaWxsPSIjM2EzYTNhIj5sYXRlcmFsZSwgY29tcHJpbWliaWxlPC90ZXh0PgogICAgPHRleHQgeD0iMjgwIiB5PSI0NjIiIGZvbnQtd2VpZ2h0PSI3MDAiIHRleHQtYW5jaG9yPSJlbmQiIGZvbnQtc2l6ZT0iMjEiPk4uIHZhZ288L3RleHQ+CiAgICA8dGV4dCB4PSI1NjYiIHk9IjUxOCIgZm9udC13ZWlnaHQ9IjcwMCI+VGlyb2lkZTwvdGV4dD4KICAgIDx0ZXh0IHg9IjI1MCIgeT0iMjQwIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIj5TQ008L3RleHQ+CiAgICA8dGV4dCB4PSI3NzAiIHk9IjYwNiIgZm9udC1zaXplPSIxOSIgZmlsbD0iIzVhNWE1YSIgdGV4dC1hbmNob3I9ImVuZCI+dHJhY2hlYTwvdGV4dD4KICA8L2c+CgogIDwhLS0gUEFOTkVMTE8gQiAtLT4KICA8ZyBjbGlwLXBhdGg9InVybCgjcEIpIj4KICAgIDx1c2UgaHJlZj0iI2ZpZWxkIiB4PSI4MjAiIHk9IjE1MCIvPgogICAgPHBhdGggZD0iTTgyMCAyMDIgQyA5ODAgMTk2LCAxMjAwIDIwMCwgMTM4MCAyMTQgQyAxMzAwIDI2MiwgMTA4MCAyNzIsIDgyMCAyNjIgWiIgZmlsbD0idXJsKCNtdXNjbGUpIi8+CiAgICA8cGF0aCBkPSJNODIwIDIwMiBDIDk4MCAxOTYsIDEyMDAgMjAwLCAxMzgwIDIxNCBDIDEzMDAgMjYyLCAxMDgwIDI3MiwgODIwIDI2MiBaIiBmaWxsPSJ1cmwoI2ZpYmVycykiLz4KICAgIDwhLS0gdmVuYSBnaXVndWxhcmUgLS0+CiAgICA8ZWxsaXBzZSBjeD0iOTg1IiBjeT0iMzQwIiByeD0iODYiIHJ5PSI0OCIgZmlsbD0iIzJlNGY4ZiIvPgogICAgPGVsbGlwc2UgY3g9Ijk4NSIgY3k9IjM0MCIgcng9Ijc4IiByeT0iNDEiIGZpbGw9InVybCgjdmVpbikiLz4KICAgIDwhLS0gRUNBIHN1cGVyZmljaWFsZSBlIG1lZGlhbGUgLS0+CiAgICA8Y2lyY2xlIGN4PSIxMjkwIiBjeT0iMzU1IiByPSI0MiIgZmlsbD0iIzdhMWYxYyIvPgogICAgPGNpcmNsZSBjeD0iMTI5MCIgY3k9IjM1NSIgcj0iMzQiIGZpbGw9InVybCgjbHVtKSIvPgogICAgPCEtLSB0aXJvaWRlYSBzdXBlcmlvcmUgLS0+CiAgICA8Y2lyY2xlIGN4PSIxMzcyIiBjeT0iMzE4IiByPSIxNCIgZmlsbD0iIzdhMWYxYyIvPgogICAgPGNpcmNsZSBjeD0iMTM3MiIgY3k9IjMxOCIgcj0iOSIgZmlsbD0idXJsKCNsdW0pIi8+CiAgICA8IS0tIElDQSBwcm9mb25kYSBlIGxhdGVyYWxlLCBidWxibyAtLT4KICAgIDxlbGxpcHNlIGN4PSIxMTUwIiBjeT0iNDgwIiByeD0iNzQiIHJ5PSI2OCIgZmlsbD0iIzdhMWYxYyIvPgogICAgPGVsbGlwc2UgY3g9IjExNTAiIGN5PSI0ODAiIHJ4PSI2NSIgcnk9IjU5IiBmaWxsPSJ1cmwoI2x1bSkiLz4KICAgIDwhLS0gbXVzY29saSBwcm9mb25kaSAtLT4KICAgIDxwYXRoIGQ9Ik0xMDgwIDYwMCBDIDExNjAgNTYwLCAxMzAwIDU2MCwgMTQwMCA2MDAgTCAxNDAwIDY0MCBMIDEwODAgNjQwIFoiIGZpbGw9IiNjZjliOGIiLz4KICAgIDxwYXRoIGQ9Ik05MzAgNjQwIEMgOTUwIDYwMCwgMTAyMCA1OTAsIDEwNzAgNjEwIEwgMTA4MCA2NDAgWiIgZmlsbD0iI2Q4ZDJjOCIgc3Ryb2tlPSIjYmZiNmE5IiBzdHJva2Utd2lkdGg9IjIiLz4KICA8L2c+CiAgPHJlY3QgeD0iODIwIiB5PSIxNTAiIHdpZHRoPSI3NDAiIGhlaWdodD0iNjQwIiByeD0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q4ZDhkOCIgc3Ryb2tlLXdpZHRoPSIyIi8+CgogIDwhLS0gZXRpY2hldHRlIEIgLS0+CiAgPGcgc3Ryb2tlPSIjMmIyYjJiIiBzdHJva2Utd2lkdGg9IjEuNiIgZmlsbD0ibm9uZSI+CiAgICA8cGF0aCBkPSJNMTE1MCA1NDggTCAxMTUwIDY5MCBMIDExODAgNjkwIiBtYXJrZXItc3RhcnQ9InVybCgjbGVhZCkiLz4KICAgIDxwYXRoIGQ9Ik0xMzMwIDM2OCBMIDEzODAgNDIwIEwgMTM5NiA0MjAiIG1hcmtlci1zdGFydD0idXJsKCNsZWFkKSIvPgogICAgPHBhdGggZD0iTTEzODQgMzA4IEwgMTQwNCAyNzAgTCAxNDEyIDI3MCIgbWFya2VyLXN0YXJ0PSJ1cmwoI2xlYWQpIi8+CiAgICA8cGF0aCBkPSJNOTg1IDM4MiBMIDkwMCA1MjAgTCA4NjAgNTIwIiBtYXJrZXItc3RhcnQ9InVybCgjbGVhZCkiLz4KICA8L2c+CiAgPGcgZm9udC1zaXplPSIyNCIgZmlsbD0iIzFmMWYxZiI+CiAgICA8dGV4dCB4PSIxMTg2IiB5PSI2OTgiIGZvbnQtd2VpZ2h0PSI3MDAiPklDQSAoYnVsYm8pPC90ZXh0PgogICAgPHRleHQgeD0iMTE4NiIgeT0iNzI2IiBmb250LXNpemU9IjE5IiBmaWxsPSIjM2EzYTNhIj5wcm9mb25kYSwgcG9zdGVyb2xhdGVyYWxlLCBwacO5IGdyYW5kZTwvdGV4dD4KICAgIDx0ZXh0IHg9IjE0MDIiIHk9IjQyOCIgZm9udC13ZWlnaHQ9IjcwMCI+RUNBPC90ZXh0PgogICAgPHRleHQgeD0iMTQwMiIgeT0iNDU0IiBmb250LXNpemU9IjE5IiBmaWxsPSIjM2EzYTNhIj5zdXBlcmZpY2lhbGUsPC90ZXh0PgogICAgPHRleHQgeD0iMTQwMiIgeT0iNDc2IiBmb250LXNpemU9IjE5IiBmaWxsPSIjM2EzYTNhIj5hbnRlcm9tZWRpYWxlPC90ZXh0PgogICAgPHRleHQgeD0iMTQxNiIgeT0iMjc2IiBmb250LXNpemU9IjE5IiBmaWxsPSIjM2EzYTNhIj5hLiB0aXJvaWRlYSBzdXAuPC90ZXh0PgogICAgPHRleHQgeD0iODUyIiB5PSI1NTIiIGZvbnQtd2VpZ2h0PSI3MDAiPlZHSTwvdGV4dD4KICAgIDx0ZXh0IHg9IjEwMzAiIHk9IjI0MCIgZm9udC13ZWlnaHQ9IjcwMCIgZmlsbD0iI2ZmZmZmZiI+U0NNPC90ZXh0PgogIDwvZz4KCiAgPCEtLSBvcmllbnRhbWVudG8gLS0+CiAgPGcgZm9udC1zaXplPSIyMSIgZmlsbD0iIzVhNWE1YSIgZm9udC13ZWlnaHQ9IjcwMCIgbGV0dGVyLXNwYWNpbmc9IjEuNSI+CiAgICA8dGV4dCB4PSI0MCIgeT0iODIyIj7il4AgTEFURVJBTEU8L3RleHQ+CiAgICA8dGV4dCB4PSI3ODAiIHk9IjgyMiIgdGV4dC1hbmNob3I9ImVuZCI+TUVESUFMRSDilrY8L3RleHQ+CiAgICA8dGV4dCB4PSI4MjAiIHk9IjgyMiI+4peAIExBVEVSQUxFPC90ZXh0PgogICAgPHRleHQgeD0iMTU2MCIgeT0iODIyIiB0ZXh0LWFuY2hvcj0iZW5kIj5NRURJQUxFIOKWtjwvdGV4dD4KICA8L2c+CiAgPHRleHQgeD0iODAwIiB5PSI4NzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM3YTdhN2EiPkFzc2UgY29ydG8gZGVsIGNvbGxvIGRlc3RybywgcmVwZXJlIHZlcnNvIGxhIGRlc3RyYSBkZWwgcGF6aWVudGUgKHNpbmlzdHJhIGRlbGxvIHNjaGVybW8pLiBTdWwgY29sbG8gc2luaXN0cm8gbWVkaWFsZSBlIGxhdGVyYWxlIHNpIGludmVydG9uby4gU2NoZW1hIG5vbiBpbiBzY2FsYS48L3RleHQ+Cjwvc3ZnPgo="><figcaption>Asse corto. Sul collo sinistro mediale e laterale si invertono sullo schermo.</figcaption></figure>
+    </div>
+    <div class="keys">
+      <div class="key"><b>ICA</b>Più profonda e posterolaterale, più grande, nasce dal bulbo, nessun ramo nel collo, flusso a bassa resistenza.</div>
+      <div class="key"><b>ECA</b>Più superficiale e anteromediale, più piccola, rami (tiroidea superiore), flusso ad alta resistenza, oscillazioni al test della temporale.</div>
+      <div class="key"><b>Vena giugulare interna</b>Laterale e superficiale, si comprime con la sonda e varia con il respiro: in asse corto è il primo riferimento.</div>
+    </div>
+  </div>
+</section>
+
+<section id="spettri">
+  <div class="wrap">
+    <h2>Lo spettro come finestra sul cuore</h2>
+    <p class="sub">Prima di graduare una stenosi guarda la forma dell'onda nella carotide comune di entrambi i lati. Un'alterazione bilaterale fa pensare a una causa centrale, cardiaca; un'alterazione monolaterale a una causa arteriosa locale. In tutti i quadri cardiaci qui sotto il grading basato sulle velocità diventa inaffidabile.</p>
+    <div class="atlas" id="specAtlas"></div>
+  </div>
+</section>
+
+<section id="placca">
+  <div class="wrap">
+    <h2>Placca: cosa vedi e cosa c'è dentro</h2>
+    <p class="sub">Prima la classificazione da usare nel referto, poi la galleria con le trappole. Negli schemi la parete profonda è in basso e il flusso va verso sinistra, come nel simulatore.</p>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <filter id="gwSpeck" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.85 0.28" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1.3 0 0 0 -0.35"/></filter>
+        <filter id="gwFine" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.2 0.5" numOctaves="1" seed="11" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  1.4 0 0 0 -0.55"/></filter>
+        <g id="gwField"><rect width="290" height="200" fill="#2c2c2c"/><rect width="290" height="200" filter="url(#gwSpeck)" opacity=".38"/><rect y="26" width="290" height="8" fill="#9c9c9c"/><rect y="34" width="290" height="4" fill="#4a4a4a"/><rect y="38" width="290" height="3" fill="#d6d6d6"/><rect y="41" width="290" height="105" fill="#060606"/><rect y="146" width="290" height="3" fill="#d6d6d6"/><rect y="149" width="290" height="4" fill="#4a4a4a"/><rect y="153" width="290" height="10" fill="#a8a8a8"/></g>
+        <path id="gwPl" d="M40 147 C 88 142, 108 90, 150 88 C 194 86, 214 130, 252 147 Z"/>
+        <path id="gwCap" d="M40 147 C 88 142, 108 90, 150 88 C 194 86, 214 130, 252 147" fill="none"/>
+        <clipPath id="gwClip"><use href="#gwPl"/></clipPath>
+      </defs>
+    </svg>
+    <div class="gwh">Ecogenicità · Gray-Weale modificata da Geroulakos</div>
+    <div class="gw" id="gwGrid"></div>
+    <div class="riskbar" aria-hidden="true"></div>
+    <div class="risklab"><span>Tipo 1 · più vulnerabile, più ictus</span><span>Tipo 4 · più stabile</span></div>
+    <p class="cap" style="margin:6px 0 0">Il tipo 5 non si gradua: la calcificazione nasconde il contenuto. Misura appena prima e appena dopo il cono d'ombra.</p>
+    <div class="gwh">Superficie</div>
+    <div class="gw3" id="gwSurf"></div>
+    <div class="gwh">La galleria delle trappole</div>
+    <p class="sub">Ogni riquadro è una sezione longitudinale schematica con la placca sulla parete posteriore. Il nero contiene lipidi, emorragia e macrofagi, il bianco collagene, il bianco con ombra calcio. L'ultimo riquadro è la trappola che vale da sola un corso: il trombo fresco anecogeno. Accendi il colore per vedere la differenza.</p>
+    <div class="toggles" style="margin-bottom:14px"><button type="button" id="gColor" aria-pressed="false">Mostra color Doppler</button></div>
+    <div class="atlas" id="plaqueAtlas"></div>
+    <div class="cards">
+      <div class="card"><div class="n">&gt; 20%</div><p>Progressione della stenosi su controlli seriati</p><div class="s">Caratteristica ad alto rischio nell'asintomatico (ESVS 2023)</div></div>
+      <div class="card"><div class="n">&gt; 40 mm²</div><p>Area di placca ampia, con analisi computerizzata</p><div class="s">Studio ACSRS, ripresa da ESVS</div></div>
+      <div class="card"><div class="n">&gt; 8 mm²</div><p>Area nera iuxtaluminale, cioè ipoecogena a contatto col lume</p><div class="s">Kakkos 2013, studio ACSRS</div></div>
+      <div class="card"><div class="n">Doppler TC</div><p>Microembolizzazione spontanea al Doppler transcranico</p><div class="s">Altre: infarto silente, emorragia intraplacca in RM, riserva cerebrovascolare ridotta</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="calcolo">
+  <div class="wrap">
+    <h2>NASCET, ECST e rimodellamento</h2>
+    <p class="sub">Inserisci il lume residuo, il diametro dell'interna distale sana e quello del bulbo nel punto della stenosi. La stessa placca vale tre numeri diversi: NASCET in diametro, ECST in diametro e stenosi per area. I valori iniziali somigliano al caso MG della lezione di Froio (40-45% NASCET, 85% per aree): guarda quanto della discrepanza nasce solo dal passare dai diametri alle aree.</p>
+    <div class="two">
+      <div class="ctrl">
+        <div class="fgrid">
+          <label for="cRes">Lume residuo, A (mm)</label><input id="cRes" type="number" min="0" max="15" step="0.1" value="2.9">
+          <label for="cIca">Interna distale sana, C (mm)</label><input id="cIca" type="number" min="1" max="10" step="0.1" value="5.0">
+          <label for="cBulb">Bulbo nel punto della stenosi, B (mm)</label><input id="cBulb" type="number" min="1" max="20" step="0.1" value="8.0">
+        </div>
+        <div class="screen"><canvas id="calcCv" width="560" height="220" aria-label="Schema delle misure NASCET ed ECST"></canvas></div>
+      </div>
+      <div class="ctrl">
+        <div class="nums">
+          <div class="num"><div class="k">NASCET</div><div class="big" id="oN">–</div></div>
+          <div class="num"><div class="k">ECST</div><div class="big" id="oE">–</div></div>
+          <div class="num"><div class="k">Per area</div><div class="big" id="oA">–</div></div>
+          <div class="num"><div class="k">Indice di rimodellamento</div><div class="big" id="oR">–</div></div>
+        </div>
+        <div class="verdict" id="cVerdict"></div>
+        <table class="readout"><tbody id="cRows"></tbody></table>
+        <div class="cap">NASCET = (1 − A/C) × 100. ECST = (1 − A/B) × 100. Stenosi per area = (1 − (A/B)²) × 100, assumendo sezioni circolari. Conversione approssimata di Rothwell: ECST ≈ 0,6 × NASCET + 40. Indice di rimodellamento come nella slide di Froio, area del vaso nel punto di stenosi divisa per l'area dell'interna distale, qui ricavato dai diametri: (B/C)². Nel caso LCM era 2,5. Anche un bulbo normale è più largo dell'interna distale, quindi l'indice da solo non basta: conta di più un ECST molto sopra l'atteso. Non esiste una soglia validata.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="vertebrali">
+  <div class="wrap">
+    <h2>Vertebrali e furto della succlavia</h2>
+    <p class="sub">Una stenosi della succlavia prima dell'origine della vertebrale fa rubare sangue al braccio, e la vertebrale omolaterale inverte progressivamente il flusso. Scegli lo stadio e premi il test di iperemia: un bracciale gonfiato sopra la sistolica per qualche minuto e poi sgonfiato fa avanzare il furto di uno stadio per alcuni secondi.</p>
+    <div class="sim">
+      <div class="dop" style="margin-top:0">
+        <div class="t"><span>PW vertebrale sinistra, tratto V2</span><span id="vLab"></span></div>
+        <canvas id="vert" width="640" height="210" aria-label="Spettro della vertebrale nei diversi stadi di furto"></canvas>
+        <p>Sopra la linea di base il flusso va verso la testa (ortogrado), sotto verso il braccio. Nella stessa immagine color, una vertebrale ortograda ha lo stesso colore della carotide comune.</p>
+      </div>
+      <div class="ctrl">
+        <div class="field">
+          <div class="lab"><span>Stadio</span></div>
+          <div class="seg two" id="vStage">
+            <button type="button" data-v="0" aria-pressed="false">Normale<small>ortograda</small></button>
+            <button type="button" data-v="1" aria-pressed="true">Stadio I<small>incisura sistolica</small></button>
+            <button type="button" data-v="2" aria-pressed="false">Stadio II<small>bidirezionale</small></button>
+            <button type="button" data-v="3" aria-pressed="false">Stadio III<small>invertita</small></button>
+          </div>
+        </div>
+        <div class="toggles"><button type="button" id="vCuff" aria-pressed="false">Test di iperemia</button></div>
+        <div class="verdict" id="vText"></div>
+        <div class="cap">Il furto ecografico è frequente e spesso asintomatico: si parla di sindrome solo con sintomi vertebrobasilari o del braccio. Misura sempre la pressione su entrambe le braccia. Una vertebrale ipoplasica (spesso la destra) o che termina nella PICA ha velocità basse e alta resistenza: non è un furto e non è una stenosi.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="criteri">
+  <div class="wrap">
+    <h2>Criteri da sapere a memoria</h2>
+    <p class="sub">Il grado si esprime in NASCET con criteri velocimetrici; nel referto vanno sempre scritti il criterio usato e i numeri misurati. Le ESC 2024 indicano il NASCET, o il suo equivalente non invasivo, come riferimento e non raccomandano più l'ECST.</p>
+    <h3 style="margin-bottom:10px">Consensus SRU 2003, carotide interna</h3>
+    <div class="tbl-wrap">
+      <table class="grade">
+        <thead><tr><th>Stenosi NASCET</th><th>PSV ICA</th><th>Rapporto ICA/CCA</th><th>EDV ICA</th><th>Placca</th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip c-ok">Normale</span></td><td>&lt; 125 cm/s</td><td>&lt; 2</td><td>&lt; 40 cm/s</td><td>Assente</td></tr>
+          <tr><td><span class="chip c-ok">&lt; 50%</span></td><td>&lt; 125 cm/s</td><td>&lt; 2</td><td>&lt; 40 cm/s</td><td>Visibile, riduzione &lt; 50%</td></tr>
+          <tr><td><span class="chip c-mid">50-69%</span></td><td>125-230 cm/s</td><td>2-4</td><td>40-100 cm/s</td><td>Riduzione ≥ 50%</td></tr>
+          <tr><td><span class="chip c-sev">≥ 70%</span></td><td>&gt; 230 cm/s</td><td>&gt; 4</td><td>&gt; 100 cm/s</td><td>Riduzione ≥ 50%</td></tr>
+          <tr><td><span class="chip c-sev">Pre-occlusione</span></td><td>Variabile, anche bassa</td><td>Variabile</td><td>Variabile</td><td>Lume filiforme</td></tr>
+          <tr><td><span class="chip c-na">Occlusione</span></td><td>Assente</td><td>Non applicabile</td><td>Non applicabile</td><td>Lume non visibile</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="s">IAC 2021, per il 50%</div><div class="n">180 cm/s</div><p>Oppure 125 cm/s solo se il rapporto ICA/CCA è almeno 2. Con 125 da solo la specificità era 64%, con 180 l'82%, con 125 più rapporto l'84%.</p><div class="s">Gornik 2021, 299 carotidi contro angiografia</div></div>
+      <div class="card"><div class="s">Variabilità tra laboratori</div><div class="n">60 soglie</div><p>Negli Stati Uniti la soglia per il 50% andava da 110 a 245 cm/s, per il 70% da 175 a 340 cm/s.</p><div class="s">Arous 2020, Circulation</div></div>
+      <div class="card"><div class="s">NASCET contro ECST</div><div class="n">50 → 70-75</div><p>Il 50% NASCET corrisponde al 70-75% ECST, il 70% NASCET all'80-85% ECST. ECST ≈ 0,6 × NASCET + 40.</p><div class="s">Rothwell, approssimazione</div></div>
+      <div class="card"><div class="s">Aorta addominale</div><div class="n">30 / 55 / 50</div><p>Aneurisma da 30 mm; riparazione da 55 mm nell'uomo e 50 mm nella donna; subaneurismatica 25-29 mm, controllo ogni 5 anni.</p><div class="s">ESVS 2024, ESC 2024</div></div>
+    </div>
+    <h3 style="margin:22px 0 10px">Restenosi intrastent: due tabelle a confronto</h3>
+    <div class="tbl-wrap">
+      <table class="grade">
+        <thead><tr><th>Restenosi</th><th>Tabella della lezione, PSV</th><th>AbuRahma 2008, PSV</th></tr></thead>
+        <tbody>
+          <tr><td>&lt; 30%</td><td>≤ 104 cm/s</td><td>&lt; 154 cm/s</td></tr>
+          <tr><td>30-49%</td><td>105-174 cm/s</td><td>154-223 cm/s</td></tr>
+          <tr><td>50-69%</td><td>175-299 cm/s</td><td>224-324 cm/s (50-79%)</td></tr>
+          <tr><td>≥ 70%</td><td>≥ 300 cm/s, EDV ≥ 140, rapporto ≥ 3,8</td><td>≥ 325 cm/s (≥ 80%)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cap" style="margin-top:8px">Lo stent è più rigido dell'arteria nativa e alza le velocità anche senza restenosi: i criteri della carotide nativa sovrastimano. Scegli una tabella, dichiarala nel referto e confronta ogni controllo con un'ecografia di riferimento a circa un mese dall'impianto.</p>
+  </div>
+</section>
+
+<section id="trucchi">
+  <div class="wrap">
+    <h2>Trappole e trucchi</h2>
+    <p class="sub">Gli errori che spostano il grading, raccolti per fase dell'esame. Vengono dalla lezione di Froio, dalle raccomandazioni ASE e dalla prassi di laboratorio; dove un punto è solo prassi lo dico.</p>
+    <div class="legend"><span><span class="tag trap">Trappola</span> errore che cambia la diagnosi</span><span><span class="tag tip">Trucco</span> accorgimento di acquisizione o lettura</span></div>
+    <div class="pits">
+      <div class="pit"><h3>Settaggi e scansione</h3><ul>
+        <li><span class="tag tip">Trucco</span><span>Lineare ad almeno 7 MHz, profondità circa 4 cm, un solo fuoco sulla parete di interesse, frame rate almeno 25 Hz, compressione bassa: conservi i grigi della placca.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Concludere "nessuna placca" su un'immagine in scala di grigi: la placca molto ipoecogena è invisibile in B-mode e si vede solo come difetto di riempimento al colore.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Ogni segmento in trasversale e in longitudinale, da almeno tre angoli: una placca liscia da un lato può essere ulcerata dall'altro.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Il trombo fresco è anecogeno come il sangue: in longitudinale la comune sembra pervia, solo il colore e l'asse corto lo smascherano.</span></li>
+      </ul><div class="src">Fonti: lezione Froio, protocollo ASE.</div></div>
+
+      <div class="pit"><h3>Angolo e campione</h3><ul>
+        <li><span class="tag tip">Trucco</span><span>Prima lo steering, poi il cursore parallelo al flusso, sotto i 60 gradi. A 60 gradi un errore di 5 gradi sposta la velocità di circa il 15%; a 70 gradi di oltre il 20%.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Dopo la stenosi cammina col volume campione di pochi millimetri: il picco sta nel getto, appena a valle del punto più stretto. Nella lezione la stessa placca dava 2,9 o 2,2 m/s.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Interna o esterna? Picchietta l'arteria temporale superficiale davanti al trago: le oscillazioni compaiono nello spettro dell'esterna.</span></li>
+        <li><span class="tag trap">Trappola</span><span>In fibrillazione atriale le velocità cambiano a ogni battito: media 3-5 cicli, evitando quelli dopo pause lunghe.</span></li>
+      </ul><div class="src">Fonti: lezione Froio; il calcolo dell'errore d'angolo è trigonometria (coseno).</div></div>
+
+      <div class="pit"><h3>Velocità che mentono</h3><ul>
+        <li><span class="tag trap">Trappola</span><span>Occlusione o stenosi severa controlaterale: il lato in esame lavora da collaterale e le velocità sovrastimano. Il rapporto ICA/CCA aiuta più della PSV.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Stenosi aortica severa e bassa portata: velocità basse e onda tardus-parvus bilaterale, la stenosi viene sottostimata.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Stato iperdinamico (anemia, febbre, ipertiroidismo, fistola per dialisi): velocità alte bilaterali senza placche importanti.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Pre-occlusione: le velocità possono crollare e far sembrare lieve una stenosi critica. Scala colore bassa, power Doppler, guadagno alto per vedere il lume filiforme.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Calcificazione con cono d'ombra lungo: misura prima e dopo e scrivi che la valutazione è limitata.</span></li>
+      </ul><div class="src">Fonti: consensus SRU 2003, lezione Froio.</div></div>
+
+      <div class="pit"><h3>Placca e rimodellamento</h3><ul>
+        <li><span class="tag trap">Trappola</span><span>Velocità quasi normale con placca che riempie il bulbo: rimodellamento positivo. La velocità misura il lume, non il carico di placca.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Nel referto: grado NASCET da velocità, poi spessore massimo in mm, area in mm², ecogenicità, omogeneità e superficie della placca.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Ulcera: escavazione della superficie in cui il colore entra e spesso gira. Cercala ruotando la sonda.</span></li>
+        <li><span class="tag trap">Trappola</span><span>"Placca" lineare sottile sulla parete posteriore del bulbo in un giovane con ictus: è probabilmente un carotid web.</span></li>
+      </ul><div class="src">Fonti: lezione Froio, Glagov 1987, ESVS 2023.</div></div>
+
+      <div class="pit"><h3>Dopo chirurgia e stent</h3><ul>
+        <li><span class="tag tip">Trucco</span><span>Restenosi precoce (circa entro 2 anni): iperplasia miointimale liscia e omogenea. Tardiva: di nuovo aterosclerosi.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Stent: espansione, carotide esterna (spesso coperta dalla maglia), interna distale, iperplasia intrastent.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Usare i criteri della carotide nativa nello stent: sovrastimi. Servono criteri dedicati.</span></li>
+      </ul><div class="src">Fonti: lezione Froio, AbuRahma 2008.</div></div>
+
+      <div class="pit"><h3>Lo spettro e il cuore</h3><ul>
+        <li><span class="tag tip">Trucco</span><span>Confronta sempre le due carotidi comuni: bilaterale fa pensare al cuore, monolaterale all'arteria.</span></li>
+        <li><span class="tag tip">Trucco</span><span>Diastole invertita in entrambe le comuni: insufficienza aortica severa. Picco bifido: insufficienza aortica o CMI ostruttiva.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Comune ad alta resistenza con diastole quasi zero da un lato: cerca un'occlusione dell'interna omolaterale.</span></li>
+        <li><span class="tag trap">Trappola</span><span>Ispessimento concentrico, liscio e omogeneo della comune (segno del macaron): arterite di Takayasu o a cellule giganti, non aterosclerosi.</span></li>
+      </ul><div class="src">Fonti: prassi di laboratorio; l'atlante degli spettri è schematico.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="lineeguida">
+  <div class="wrap">
+    <h2>Indicazioni e trial del 2025</h2>
+    <p class="sub">Le linee guida ESC 2024 ed ESVS 2023 sono uscite prima di CREST-2 ed ECST-2. Per chi fa l'ecografia il messaggio è che la percentuale da sola non basta più: contano le caratteristiche della placca.</p>
+    <div class="steps">
+      <div class="step"><div class="tagline">SINTOMATICI</div><h3>Presto</h3><ul><li>70-99%: endoarteriectomia raccomandata, idealmente entro 14 giorni (ESC 2024, I-A)</li><li>50-69%: da considerare (IIa-A)</li><li>Stent: opzione nel rischio chirurgico alto o nei più giovani</li></ul></div>
+      <div class="step"><div class="tagline">ASINTOMATICI</div><h3>Solo se ad alto rischio</h3><ul><li>60-99%: rivascolarizzazione da considerare solo con almeno una caratteristica clinica o di imaging ad alto rischio e aspettativa di vita oltre 5 anni (ESC 2024 IIa-B; ESVS 2023)</li><li>Terapia medica ottimale per tutti</li></ul></div>
+      <div class="step"><div class="tagline">CREST-2 · NEJM 2025</div><h3>Stent sì, chirurgia no</h3><ul><li>Asintomatici ≥ 70%, terapia medica intensiva in tutti</li><li>Stent 2,8% contro 6,0% (p 0,02)</li><li>Endoarteriectomia 3,7% contro 5,3% (p 0,24)</li><li>Vantaggio assoluto piccolo</li></ul></div>
+      <div class="step"><div class="tagline">ECST-2 · LANCET NEUROL 2025</div><h3>Nessun beneficio a 2 anni</h3><ul><li>429 pazienti con stenosi ≥ 50%, asintomatici o sintomatici a rischio basso-intermedio</li><li>Rivascolarizzazione aggiunta alla terapia ottimizzata: win ratio 1,01</li><li>Risultati a 5 anni attesi</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="casi">
+  <div class="wrap">
+    <h2>Casi</h2>
+    <p class="sub">Otto quadri per allenarti. Rispondi e leggi la spiegazione. <span class="score" id="score"></span></p>
+    <div class="cases" id="caseGrid"></div>
+  </div>
+</section>
+
+<section id="fonti">
+  <div class="wrap">
+    <h2>Fonti e limiti</h2>
+    <ol class="refs">
+      <li>Froio A. Patologia TSA e vaso aortico. Approfondimenti in ecografia cardiovascolare, MOD3, Settore Formazione SIECVI, 2025.</li>
+      <li>Grant EG et al. Carotid artery stenosis: gray-scale and Doppler US diagnosis. Society of Radiologists in Ultrasound Consensus Conference. Radiology 2003.</li>
+      <li>Gornik HL et al. Optimization of duplex velocity criteria for diagnosis of ICA stenosis (IAC). Vasc Med 2021;26:515-525. <a href="https://doi.org/10.1177/1358863X211011253" target="_blank" rel="noopener">doi.org/10.1177/1358863X211011253</a></li>
+      <li>Arous EJ et al. Variation in ultrasound diagnostic thresholds for carotid stenosis in the United States. Circulation 2020;141:946-953. <a href="https://doi.org/10.1161/CIRCULATIONAHA.119.043963" target="_blank" rel="noopener">doi.org/10.1161/CIRCULATIONAHA.119.043963</a></li>
+      <li>AbuRahma AF et al. Optimal carotid duplex velocity criteria for defining the severity of carotid in-stent restenosis. J Vasc Surg 2008;48:589-594. <a href="https://doi.org/10.1016/j.jvs.2008.04.004" target="_blank" rel="noopener">doi.org/10.1016/j.jvs.2008.04.004</a></li>
+      <li>Naylor R et al. ESVS 2023 Clinical Practice Guidelines on the Management of Atherosclerotic Carotid and Vertebral Artery Disease. Eur J Vasc Endovasc Surg 2023;65:7-111. <a href="https://doi.org/10.1016/j.ejvs.2022.04.011" target="_blank" rel="noopener">doi.org/10.1016/j.ejvs.2022.04.011</a></li>
+      <li>Mazzolai L et al. 2024 ESC Guidelines for the management of peripheral arterial and aortic diseases. Eur Heart J 2024. Sintesi consultata: <a href="https://www.sfcardio.fr/wp-content/uploads/2025/06/ACVD-2506-Editorial-comments-Arteriopathie.pdf" target="_blank" rel="noopener">commento editoriale SFC</a></li>
+      <li>Brott TG et al. Medical management and revascularization for asymptomatic carotid stenosis (CREST-2). N Engl J Med 2025. <a href="https://www.acc.org/latest-in-cardiology/journal-scans/2025/12/02/17/45/crest-2" target="_blank" rel="noopener">sintesi ACC</a></li>
+      <li>Donners SJA et al. ECST-2: 2-year interim results. Lancet Neurol 2025. <a href="https://pure.amsterdamumc.nl/ws/files/149071745/Optimised-medical-therapy-alone-versus-optimised-medical-therapy-plus-revascularisation-for-asymptomatic-or-low-to-inter.pdf" target="_blank" rel="noopener">testo</a></li>
+      <li>Saba L et al. Carotid Plaque-RADS: a novel stroke risk classification system. JACC Cardiovasc Imaging 2024;17:62-75. <a href="https://doi.org/10.1016/j.jcmg.2023.09.005" target="_blank" rel="noopener">doi.org/10.1016/j.jcmg.2023.09.005</a></li>
+      <li>Gray-Weale AC et al. Carotid artery atheroma: comparison of preoperative B-mode ultrasound appearance with carotid endarterectomy specimen pathology. J Cardiovasc Surg 1988. Geroulakos G et al. Characterization of symptomatic and asymptomatic carotid plaques using high-resolution real-time ultrasonography. Br J Surg 1993.</li>
+      <li>Wanhainen A et al. ESVS 2024 Clinical Practice Guidelines on abdominal aorto-iliac artery aneurysms. <a href="https://evtoday.com/articles/2024-mar/highlights-from-the-esvs-2024-clinical-practice-guidelines-on-the-management-of-abdominal-aortoiliac-artery-aneurysms" target="_blank" rel="noopener">sintesi Endovascular Today</a></li>
+      <li>Testo di studio collegato: <a href="https://claude.ai/artifact/XPsf8GTULfgfQ3vHxYJZbm" target="_blank" rel="noopener">Eco TSA, testo di studio e ripasso</a></li>
+    </ol>
+    <div class="limits">
+      <h3 style="margin:18px 0 8px">Cosa non fa questo modello</h3>
+      <p>Le velocità del simulatore sono interpolate tra le soglie SRU e i dati della lezione, non nascono da un modello fluidodinamico. La geometria della biforcazione è schematica e il diametro del bulbo è fisso al 160% dell'interna distale, 240% con il rimodellamento. Gli effetti cardiaci (riduzione o aumento delle velocità, forma dell'onda) sono qualitativi e servono a riconoscere il pattern, non a correggere un numero.</p>
+      <p>Sono sicuro dei criteri SRU, dei dati IAC, AbuRahma, CREST-2 ed ECST-2, che ho controllato su fonti primarie o su PubMed. Le classi ESC 2024 le ho lette in un commento editoriale e non nel testo originale. Le soglie di area di placca (40 e 8 mm²) e della progressione (20%) le riporto dall'ESVS a memoria: vanno ricontrollate sulla tabella delle linee guida prima di usarle in un referto.</p>
+    </div>
+  </div>
+</section>
+</main>
+<footer><div class="wrap">TSALab · strumento didattico, non per la diagnosi. Basato sulla lezione SIECVI di Alberto Froio e sulle fonti elencate.</div></footer>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const fmt=(x,d=0)=>x.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d});
+function interp(tab,x){if(x<=tab[0][0])return tab[0][1];for(let i=1;i<tab.length;i++){if(x<=tab[i][0]){const[a,va]=tab[i-1],[b,vb]=tab[i];return lerp(va,vb,(x-a)/(b-a));}}return tab[tab.length-1][1];}
+function rng(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return((s>>>0)%100000)/100000;};}
+function hash2(a,b,seed){let n=Math.imul(a,374761393)+Math.imul(b,668265263)+Math.imul(seed,144665);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;}
+function vnoise(x,y,sc,seed){const X=x/sc,Y=y/sc,xi=Math.floor(X),yi=Math.floor(Y),fx=X-xi,fy=Y-yi;const sm=t=>t*t*(3-2*t);const u=sm(fx),v=sm(fy);return lerp(lerp(hash2(xi,yi,seed),hash2(xi+1,yi,seed),u),lerp(hash2(xi,yi+1,seed),hash2(xi+1,yi+1,seed),u),v);}
+function hetGray(x,y,n){const m=vnoise(x,y,9,3)*0.65+vnoise(x,y,4,5)*0.35;const t=clamp((m-0.36)/0.3,0,1);return lerp(28,185,t*t*(3-2*t))+n*38-19;}
+function dopColor(f,tex){ // f in [-1,1] dopo l'aliasing
+  const a=Math.abs(f), k=tex;
+  const main=(55+200*Math.pow(Math.min(1,a*1.15),0.75))*k;
+  const hi=a>0.72?235*Math.pow((a-0.72)/0.28,1.3):0;
+  return f>=0?[main,hi,0]:[0,hi*0.95,main];
+}
+const reduced=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- velocità di riferimento ---------- */
+const PSV_TAB=[[0,75],[30,90],[50,125],[60,165],[70,230],[80,320],[90,440],[94,420],[96,300],[98,140],[99,60]];
+const EDV_TAB=[[0,27],[40,32],[50,40],[60,58],[70,100],[80,145],[90,200],[94,170],[96,110],[98,45],[99,15]];
+
+/* ---------- forma d'onda (0..1) per fase del battito ---------- */
+function shape(kind,ph,mode){
+  // kind: cca, ica, eca, vert ; mode: normal, tardus, bisf, flat
+  if(mode==="flat") return 0.5+0.07*Math.sin(ph*Math.PI*2);
+  let tp = kind==="eca"?0.065:0.08;
+  if(mode==="tardus") tp=0.2;
+  let s;
+  if(mode==="bisf"){
+    const p1=Math.exp(-Math.pow((ph-0.07)/0.035,2)), p2=0.92*Math.exp(-Math.pow((ph-0.19)/0.045,2));
+    s=Math.max(p1,p2)+0.15*Math.exp(-Math.pow((ph-0.13)/0.03,2));
+    const dia = ph>0.3 ? 0.38*Math.pow(1-(ph-0.3)/0.7,1.4) : 0.38;
+    if(ph>0.24) s=Math.max(s, dia*clamp((ph-0.24)/0.06,0,1));
+    return clamp(s,0,1);
+  }
+  if(ph<tp){ s = mode==="tardus" ? Math.sin(ph/tp*Math.PI/2) : Math.pow(ph/tp,1.4); }
+  else if(ph<0.34){
+    const k=(ph-tp)/(0.34-tp);
+    const low = kind==="eca"?0.08:(kind==="cca"?0.3:0.45);
+    s = mode==="tardus" ? lerp(1,low+0.1,Math.pow(k,1.3)) : lerp(1,low,Math.pow(k,0.7));
+    if(mode!=="tardus") s -= (kind==="eca"?0.16:0.09)*Math.exp(-Math.pow((ph-0.32)/0.018,2));
+  } else {
+    const low = kind==="eca"?0.12:(kind==="cca"?0.3:0.42);
+    const k=(ph-0.34)/0.66;
+    s = low*Math.pow(1-k,1.5);
+    if(kind!=="eca") s += 0.06*Math.exp(-Math.pow((ph-0.38)/0.03,2));
+  }
+  return s;
+}
+
+/* ---------- stato ---------- */
+const st={N:75,ptype:"het",cond:"normal",gate:"th",ang:60,err:0,nyq:50,color:true,remod:false,contra:false,play:true};
+
+/* condizione cardiaca: fattori sui valori di riferimento e forma */
+function condParams(){
+  const c=st.cond; let f={ps:1,ed:1,mode:"normal",ccaEdv:null,ecaEdv:null};
+  if(c==="as") f={ps:0.68,ed:0.85,mode:"tardus"};
+  if(c==="low") f={ps:0.62,ed:0.7,mode:"tardus"};
+  if(c==="ar") f={ps:1.2,ed:0.45,mode:"bisf",ccaEdv:-18,ecaEdv:-12};
+  if(c==="hocm") f={ps:1.0,ed:1.0,mode:"bisf"};
+  if(c==="lvad") f={ps:0.72,ed:1.55,mode:"flat"};
+  if(c==="hyper") f={ps:1.35,ed:1.3,mode:"normal"};
+  return f;
+}
+function refVals(vessel){
+  const f=condParams(); const occ=st.N>=100;
+  let ps,ed;
+  if(vessel==="cca"){ps=85;ed=22; if(occ){ed=5;ps=78;}}
+  else if(vessel==="ica"){ps=75;ed=27;}
+  else if(vessel==="eca"){ps=90;ed=9; if(occ){ed=24;ps=100;}}
+  else {ps=50;ed=15;}
+  ps*=f.ps; ed*=f.ed;
+  if(vessel==="cca"&&f.ccaEdv!==null) ed=f.ccaEdv;
+  if(vessel==="eca"&&f.ecaEdv!==null) ed=f.ecaEdv;
+  if(st.contra&&vessel!=="vert"){ps*=vessel==="cca"?1.2:1.28; ed*=vessel==="cca"?1.15:1.28;}
+  return {ps,ed,mode:f.mode};
+}
+
+/* battiti: FA, alternante */
+const beat={t0:0,rr:0.92,scale:1,idx:0,prevRR:0.92};
+function nextBeat(){
+  beat.idx++; beat.prevRR=beat.rr;
+  if(st.cond==="af"){beat.rr=0.45+Math.random()*0.75; beat.scale=clamp(0.72+0.35*(beat.prevRR-0.45)/0.75,0.7,1.1);}
+  else if(st.cond==="alt"){beat.rr=0.8; beat.scale=beat.idx%2?0.68:1;}
+  else if(st.cond==="lvad"){beat.rr=0.92;beat.scale=1;}
+  else {beat.rr=0.92;beat.scale=1;}
+}
+let clock=0;
+function phaseAt(){return clamp((clock-beat.t0)/beat.rr,0,0.9999);}
+
+/* velocità di riferimento istantanea del vaso */
+function vesselV(vessel,ph,scale){
+  const r=refVals(vessel); const kind=vessel;
+  const s=shape(kind,ph,r.mode);
+  return {ps:r.ps*scale, ed:r.ed*(r.mode==="flat"?1:scale), sh:s};
+}
+
+/* ---------- geometria della biforcazione ---------- */
+const W=640,H=380,SC=13; // 13 px/mm
+const bif={cv:$("#bif")}; bif.ctx=bif.cv.getContext("2d");
+function bez(p0,p1,p2,n){const pts=[];for(let i=0;i<=n;i++){const t=i/n,a=(1-t)*(1-t),b=2*(1-t)*t,c=t*t;pts.push([a*p0[0]+b*p1[0]+c*p2[0],a*p0[1]+b*p1[1]+c*p2[1]]);}return pts;}
+function resample(pts,step){const out=[pts[0]];let acc=0;for(let i=1;i<pts.length;i++){let [x0,y0]=out[out.length-1];const [x1,y1]=pts[i];let d=Math.hypot(x1-x0,y1-y0);while(d>=step){const t=step/d;x0=x0+(x1-x0)*t;y0=y0+(y1-y0)*t;out.push([x0,y0]);d=Math.hypot(x1-x0,y1-y0);}}return out;}
+function mkVessel(pts){const p=resample(pts,1);const tg=[];for(let i=0;i<p.length;i++){const a=p[Math.max(0,i-2)],b=p[Math.min(p.length-1,i+2)];const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1;tg.push([dx/L,dy/L]);}return {p,tg};}
+const V_CCA=mkVessel([[-30,178],[262,178]]);
+const V_ICA=mkVessel(bez([238,188],[395,198],[680,236],200));
+const V_ECA=mkVessel(bez([238,158],[365,136],[680,92],200));
+const RC=3.5*SC, RI=2.5*SC, RE=1.9*SC;
+const S_TH=78;
+
+function bump(s){ // dilatazione del bulbo lungo l'interna
+  const up=clamp(s/38,0,1), dn=clamp((165-s)/70,0,1);
+  const sm=x=>x*x*(3-2*x);
+  return Math.min(sm(up),sm(dn));
+}
+function icaRadii(s){
+  const k = st.remod?2.4:1.6;
+  const Db=k*2*RI, base=2*RI;
+  const Dt = base + (Db-base)*bump(s);
+  const extra=Dt-base;
+  return {rn:RI+0.28*extra, rf:RI+0.72*extra, D:Dt, Db};
+}
+function plaqueAt(s){ // spessore di placca sulla parete posteriore, px
+  const N=st.N/100;
+  if(st.ptype==="web"||N<0.04) return 0;
+  const g=icaRadii(S_TH);
+  const res = N>=1?0:2*RI*(1-N);
+  const Pmax=Math.max(0,g.Db-res);
+  if(s<18||s>150) return 0;
+  let h;
+  if(s<=S_TH) h=Math.pow(Math.sin((s-18)/(S_TH-18)*Math.PI/2),1.6);
+  else h=Math.pow(Math.cos((s-S_TH)/(150-S_TH)*Math.PI/2),1.3);
+  let p=Pmax*h;
+  if(st.ptype==="ulc"&&s>S_TH-20&&s<S_TH-6) p*=0.62;
+  return p;
+}
+
+/* buffers */
+const NPX=W*H;
+const cls=new Uint8Array(NPX); // 0 tessuto,1 lume,2 placca,3 parete,4 trombo
+const vid=new Int8Array(NPX); const sAt=new Float32Array(NPX); const qAt=new Float32Array(NPX); const oAt=new Float32Array(NPX);
+const fsA=new Float32Array(NPX), fdA=new Float32Array(NPX), axA=new Float32Array(NPX); const turb=new Uint8Array(NPX);
+let base=null, lumList=null;
+const best=new Float32Array(NPX);
+
+function stampVessel(V,id){
+  const L=V.p.length;
+  for(let i=0;i<L;i++){
+    const [x,y]=V.p[i],[tx,ty]=V.tg[i]; const nx=-ty, ny=tx; // normale verso il profondo
+    let rn,rf,pl=0,s=i;
+    if(id===0){ rn=RC; rf=RC; }
+    else if(id===1){ const g=icaRadii(s); rn=g.rn; rf=g.rf; pl=plaqueAt(s); }
+    else { rn=RE; rf=RE; }
+    const lo=-rn-9, hi=rf+9;
+    for(let o=lo;o<=hi;o+=0.5){
+      const px=Math.round(x+nx*o), py=Math.round(y+ny*o);
+      if(px<0||py<0||px>=W||py>=H) continue;
+      const k=py*W+px;
+      let c, score;
+      const lumHi = rf-pl;
+      if(o>-rn && o<lumHi){ c=1; score=Math.abs((o-(lumHi-rn)/2)/((lumHi+rn)/2||1)); }
+      else if(pl>0 && o>=lumHi && o<rf){ c=2; score=1.5; }
+      else { c=3; score=2+Math.min(Math.abs(o+rn),Math.abs(o-rf))/10; }
+      const pri = c===1?0:(c===2?1:2);
+      const cur = cls[k]===1?0:(cls[k]===2?1:(cls[k]===3?2:9));
+      if(pri<cur || (pri===cur && score<best[k])){
+        cls[k]=c; best[k]=score; vid[k]=id; sAt[k]=s; oAt[k]=o;
+        if(c===1){ const mid=(lumHi-rn)/2, half=(lumHi+rn)/2; qAt[k]=(o-mid)/(half||1); }
+      }
+    }
+  }
+}
+
+function buildScene(){
+  cls.fill(0); best.fill(99); vid.fill(-1); turb.fill(0);
+  stampVessel(V_CCA,0); stampVessel(V_ECA,2); stampVessel(V_ICA,1);
+  const N=st.N/100, occ=st.N>=100;
+  const R=rng(7); base=new Uint8ClampedArray(NPX*4);
+  // ombra acustica dalle calcificazioni: per colonna
+  const shadowFrom=new Int16Array(W).fill(9999);
+  if(st.ptype==="calc"){
+    for(let x=0;x<W;x++){for(let y=0;y<H;y++){const k=y*W+x; if(cls[k]===2){shadowFrom[x]=Math.min(shadowFrom[x],y+3);}}}
+  }
+  // web: membrana e tasca di ricircolo
+  const isWeb=st.ptype==="web";
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const k=y*W+x; let g;
+      const noise=R();
+      const c=cls[k];
+      if(c===1){
+        g=6+noise*10;
+        if(occ && vid[k]===1 && sAt[k]>34){ cls[k]=4; g=18+noise*22; }
+        if(isWeb && vid[k]===1){ const s=sAt[k]; const g2=icaRadii(s); if(s>34&&s<38&&oAt[k]>g2.rf-0.42*g2.D){ g=200+noise*40; cls[k]=2; } }
+      } else if(c===2){
+        const t=st.ptype;
+        if(t==="hypo") g=22+noise*28;
+        else if(t==="hyper") g=150+noise*60;
+        else if(t==="calc") g=205+noise*45;
+        else g=hetGray(x,y,noise);
+      } else if(c===3){
+        const o=oAt[k]; const id=vid[k]; let rn,rf; if(id===1){const gg=icaRadii(sAt[k]);rn=gg.rn;rf=gg.rf;} else {rn=id===0?RC:RE; rf=rn;}
+        const d=Math.min(Math.abs(o+rn),Math.abs(o-rf));
+        g = d<1.6?150+noise*40:(d<3.2?60+noise*30:(d<7?170+noise*55:80+noise*40));
+      } else {
+        const layer=0.5+0.5*Math.sin(y*0.09+Math.sin(x*0.013)*2);
+        g=38+layer*40+noise*55; if(y<22) g=20+noise*30;
+      }
+      if(y>shadowFrom[x]) g*=0.12;
+      base[k*4]=g; base[k*4+1]=g; base[k*4+2]=g*1.02; base[k*4+3]=255;
+    }
+  }
+  // fattori di velocità per pixel di lume
+  const psvTh=interp(PSV_TAB,Math.min(st.N,99)), edvTh=interp(EDV_TAB,Math.min(st.N,99));
+  const fsTh=psvTh/75, fdTh=edvTh/27; const gTh=icaRadii(S_TH);
+  const Pmax=plaqueAt(S_TH)||1;
+  const toward=[Math.sin(20*Math.PI/180),-Math.cos(20*Math.PI/180)];
+  const list=[];
+  for(let k=0;k<NPX;k++){
+    if(cls[k]!==1) continue;
+    const id=vid[k], s=sAt[k], q=qAt[k];
+    const prof=Math.max(0.05,1-0.8*q*q);
+    let fs=1, fd=1; let tg;
+    if(id===0) tg=V_CCA.tg[Math.min(V_CCA.tg.length-1,Math.max(0,Math.round(s)))];
+    else if(id===2) tg=V_ECA.tg[Math.min(V_ECA.tg.length-1,Math.round(s))];
+    else tg=V_ICA.tg[Math.min(V_ICA.tg.length-1,Math.round(s))];
+    if(id===1){
+      const g=icaRadii(s); const p=plaqueAt(s);
+      const lumen=g.D-p; const relD=(2*RI)/Math.max(lumen,1);
+      if(st.N>=4 && st.ptype!=="web"){
+        if(s<=S_TH){ const w=Math.pow(p/Pmax,2.2); fs=lerp(Math.min(1,relD*0.9),fsTh,w); fd=lerp(Math.min(1,relD*0.9),fdTh,w);}
+        else {
+          const dec=Math.exp(-(s-S_TH)/(st.N>=50?26:14));
+          const core=Math.abs(q)<0.55?1:0.45;
+          fs=lerp(1,fsTh,dec*core); fd=lerp(1,fdTh,dec*core);
+          if(st.N>=50 && s>S_TH+4 && s<S_TH+70){ turb[k]=1; }
+          if(st.N>=80 && s>S_TH+70){ fs=0.62; fd=0.75; }
+        }
+      } else if(st.ptype==="web"){
+        fs=Math.min(1,relD); fd=fs;
+        if(s>38&&s<75&&oAt[k]>g.rf-0.5*g.D){ fs=-0.22; fd=-0.05; }
+      } else {
+        fs=Math.min(1.05,relD*1.05); fd=fs;
+        if(s>26&&s<100&&oAt[k]>(g.rf-g.rn)/2+0.15*g.D){ fs=-0.25; fd=0.04; }
+      }
+      if(st.ptype==="ulc" && s>S_TH-20&&s<S_TH-6 && q>0.65){ fs=-0.35; fd=-0.1; }
+      if(st.N>=100){ if(s>34){ continue; } fs=s<20?0.35:0.12; fd=-0.2; }
+    }
+    const ax=tg[0]*toward[0]+tg[1]*toward[1];
+    fsA[k]=fs*prof; fdA[k]=fd*prof; axA[k]=ax;
+    list.push(k);
+  }
+  lumList=Int32Array.from(list);
+  bif.img=bif.ctx.createImageData(W,H);
+  bif.shadow=shadowFrom;
+}
+
+/* ---------- campione PW ---------- */
+const GATES={cca:{v:0,s:190,lab:"comune"},pre:{v:1,s:14,lab:"interna prossimale"},th:{v:1,s:S_TH,lab:"stenosi"},post:{v:1,s:S_TH+34,lab:"post-stenosi"},dist:{v:1,s:300,lab:"interna distale"},eca:{v:2,s:70,lab:"esterna"}};
+function gateFactors(){
+  const g=GATES[st.gate]; const N=st.N;
+  if(g.v===0) return {vessel:"cca",fs:1,fd:1,dist:false,turb:false,none:false};
+  if(g.v===2) return {vessel:"eca",fs:1,fd:1,dist:false,turb:false,none:false};
+  const psvTh=interp(PSV_TAB,Math.min(N,99)), edvTh=interp(EDV_TAB,Math.min(N,99));
+  if(N>=100){ if(st.gate==="pre") return {vessel:"ica",fs:0.3,fd:-0.25,dist:false,turb:false,none:false,stump:true}; return {vessel:"ica",fs:0,fd:0,none:true}; }
+  if(st.ptype==="web"||N<4){ const fac=st.gate==="th"?0.9:1; return {vessel:"ica",fs:fac,fd:fac,dist:false,turb:false,none:false}; }
+  if(st.gate==="pre") return {vessel:"ica",fs:0.85,fd:0.9,dist:false,turb:false,none:false};
+  if(st.gate==="th") return {vessel:"ica",fs:psvTh/75,fd:edvTh/27,dist:false,turb:N>=50,none:false,jet:true};
+  if(st.gate==="post"){ const dec=Math.exp(-34/(N>=50?26:14)); return {vessel:"ica",fs:lerp(1,psvTh/75,dec*0.8),fd:lerp(1,edvTh/27,dec*0.8),dist:false,turb:N>=50,none:false}; }
+  return {vessel:"ica",fs:N>=80?0.62:1,fd:N>=80?0.75:1,dist:N>=80,turb:false,none:false};
+}
+function angleFactor(){ const th=st.ang*Math.PI/180, te=clamp(st.ang+st.err,1,88)*Math.PI/180; return Math.cos(th)/Math.cos(te); }
+
+/* ---------- letture ---------- */
+function classifySRU(psv,edv,ratio,N){
+  if(N>=100) return {t:"Occlusione",c:"c-na"};
+  if(psv>230) return {t:"≥ 70%",c:"c-sev"};
+  if(psv>=125) return {t:"50-69%",c:"c-mid"};
+  return {t:N>=4?"< 50%":"Normale",c:"c-ok"};
+}
+function classifyIAC(psv,ratio,N){
+  if(N>=100) return {t:"Occlusione",c:"c-na"};
+  const ge50= psv>=180 || (psv>=125&&ratio>=2);
+  return ge50?{t:"≥ 50%",c:"c-mid"}:{t:"< 50%",c:"c-ok"};
+}
+function trueClass(N){
+  if(N>=100) return "occlusione"; if(N>=95) return "pre-occlusione"; if(N>=70) return "≥ 70%"; if(N>=50) return "50-69%"; if(N>=4) return "< 50%"; return "nessuna stenosi";
+}
+function updateReadout(){
+  const af=angleFactor(); const N=st.N; const f=condParams();
+  const cca=refVals("cca"), ica=refVals("ica");
+  let psvT, edvT;
+  if(N>=100){psvT=0;edvT=0;}
+  else if(st.ptype==="web"||N<4){psvT=ica.ps*0.95;edvT=ica.ed;}
+  else {psvT=ica.ps*interp(PSV_TAB,Math.min(N,99))/75; edvT=ica.ed*interp(EDV_TAB,Math.min(N,99))/27;}
+  const ccaT=cca.ps;
+  const psvM=psvT*af, edvM=edvT*af, ccaM=ccaT*af;
+  const ratioM=ccaM>0?psvM/ccaM:0, ratioT=ccaT>0?psvT/ccaT:0;
+  const sru=classifySRU(psvM,edvM,ratioM,N), iac=classifyIAC(psvM,ratioM,N);
+  const gN=icaRadii(S_TH); const res=N>=100?0:2*RI*(1-N/100);
+  const ecst = st.ptype==="web"||N<4?0:Math.round((1-res/gN.Db)*100);
+  const rows=[
+    ["PSV carotide comune", fmt(ccaM)+" cm/s", fmt(ccaT)],
+    ["PSV interna, picco del getto", N>=100?"assente":fmt(psvM)+" cm/s", N>=100?"–":fmt(psvT)],
+    ["EDV interna", N>=100?"assente":fmt(edvM)+" cm/s", N>=100?"–":fmt(edvT)],
+    ["Rapporto ICA/CCA", N>=100?"–":fmt(ratioM,1), N>=100?"–":fmt(ratioT,1)],
+    ["Errore da angolo", (af>=1?"+":"")+fmt((af-1)*100)+"%", "0%"],
+    ["Criteri SRU 2003", `<span class="chip ${sru.c}">${sru.t}</span>`, ""],
+    ["Proposta IAC 2021", `<span class="chip ${iac.c}">${iac.t}</span>`, ""],
+    ["Stenosi ECST, diametro", ecst?ecst+"%":"–", ""]
+  ];
+  $("#rows").innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td class="v">${r[1]}</td><td class="v">${r[2]}</td></tr>`).join("");
+  const tc=trueClass(N);
+  const agree = (tc==="≥ 70%"&&sru.t==="≥ 70%")||(tc==="50-69%"&&sru.t==="50-69%")||((tc==="< 50%"||tc==="nessuna stenosi")&&(sru.t==="< 50%"||sru.t==="Normale"))||(tc==="occlusione"&&sru.t==="Occlusione");
+  let v=`<b>Vero: ${tc}${N>=4&&N<100&&st.ptype!=="web"?" ("+N+"% NASCET)":""}.</b> `;
+  v+= agree?"Il Doppler, con questi settaggi e questo cuore, classifica correttamente.":`Il Doppler direbbe <b>${sru.t}</b>: la misura ti porta fuori strada.`;
+  if(st.ptype==="web") v=`<b>Carotid web.</b> Stenosi emodinamicamente trascurabile, ma dietro la membrana il flusso ristagna e gira: è il substrato dell'embolia, non la velocità.`;
+  $("#verdict").innerHTML=v;
+  const w=[];
+  if(st.ang>60) w.push("Angolo oltre 60 gradi: ogni grado di errore del cursore pesa molto di più.");
+  if(Math.abs(st.err)>=5) w.push(`Cursore disallineato di ${Math.abs(st.err)} gradi: la velocità è ${af>1?"sovrastimata":"sottostimata"} del ${fmt(Math.abs(af-1)*100)}%.`);
+  if(st.contra) w.push("Occlusione controlaterale: questo lato fa da collaterale, le velocità salgono. Guarda il rapporto ICA/CCA.");
+  if(["as","low"].includes(st.cond)) w.push("Portata ridotta o ostacolo all'efflusso: onda tardus-parvus bilaterale, la stenosi viene sottostimata.");
+  if(st.cond==="hyper") w.push("Stato iperdinamico: velocità alte ovunque, anche senza stenosi.");
+  if(st.cond==="ar") w.push("Insufficienza aortica severa: picco bifido e diastole invertita nella comune.");
+  if(st.cond==="af") w.push("Fibrillazione atriale: valori nominali in tabella; nello spettro cambiano battito per battito, media 3-5 cicli.");
+  if(st.cond==="lvad") w.push("LVAD a flusso continuo: pulsatilità quasi assente, i criteri di velocità non sono validati.");
+  if(N>=95&&N<100) w.push("Pre-occlusione: le velocità calano con il lume filiforme. Scala bassa e power Doppler per non chiamarla occlusione, né stenosi moderata.");
+  if(N>=100) w.push("Occlusione: nessun flusso nell'interna, la comune diventa ad alta resistenza e l'esterna si 'internalizza' con più diastole.");
+  if(st.remod&&N>=4&&N<100&&st.ptype!=="web") w.push(`Rimodellamento positivo: ECST ${ecst}% contro NASCET ${N}%. La placca è più grande di quanto dica la velocità.`);
+  if(st.ptype==="calc") w.push("Calcificazione: nel cono d'ombra non c'è né immagine né colore. Misura appena prima e appena dopo.");
+  $("#warn").innerHTML=w.join("<br>");
+  $("#hudCond").textContent=$("#cond").selectedOptions[0].textContent+(st.contra?" · occl. controlaterale":"");
+  $("#hudGate").textContent=GATES[st.gate].lab;
+  $("#hudNyq").textContent="±"+st.nyq;
+  // scala spettro
+  const gf=gateFactors(); const r=refVals(gf.vessel);
+  const peak=Math.max(30,Math.abs(r.ps*gf.fs*af), Math.abs(r.ed*gf.fd*af));
+  pw.scale=Math.ceil(peak*1.25/50)*50;
+  pw.neg = (r.ed<0||gf.fd<0||gf.turb||gf.stump)?0.35:0.18;
+  const lab = gf.none?"nessun flusso":`PSV ${fmt(r.ps*gf.fs*af)} · EDV ${fmt(r.ed*gf.fd*af)} cm/s`;
+  $("#pwLab").textContent=lab+" · θ "+st.ang+"°";
+  pw.clear=true;
+}
+
+/* ---------- disegno della biforcazione ---------- */
+function drawBif(){
+  const ctx=bif.ctx, img=bif.img, d=img.data;
+  d.set(base);
+  if(st.color && lumList){
+    const ph=phaseAt();
+    const vv={0:vesselV("cca",ph,beat.scale),1:vesselV("ica",ph,beat.scale),2:vesselV("eca",ph,beat.scale)};
+    const ny=st.nyq; const tanS=Math.tan(20*Math.PI/180);
+    const R=Math.random;
+    for(let i=0;i<lumList.length;i++){
+      const k=lumList[i]; const x=k%W, y=(k-x)/W;
+      if(y<52||y>336) continue;
+      const xs=x-(y-52)*tanS; if(xs<150||xs>600) continue;
+      if(y>bif.shadow[x]) continue;
+      const w=vv[vid[k]];
+      const ed=w.ed*fdA[k]; let v=ed+(w.ps*fsA[k]-ed)*w.sh;
+      if(turb[k]){ v*= (0.3+R()*1.4); if(R()<0.22) v=-v*0.6; }
+      let va=v*axA[k];
+      if(Math.abs(va)<ny*0.07) continue;
+      va=((va+ny)%(2*ny)+2*ny)%(2*ny)-ny;
+      const c=dopColor(va/ny,0.88+R()*0.12);
+      d[k*4]=c[0]; d[k*4+1]=c[1]; d[k*4+2]=c[2];
+    }
+  }
+  ctx.putImageData(img,0,0);
+  // riquadro colore inclinato
+  if(st.color){ const tanS=Math.tan(20*Math.PI/180); ctx.strokeStyle="rgba(220,230,240,.55)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(150,52); ctx.lineTo(600,52); ctx.lineTo(600+284*tanS,336); ctx.lineTo(150+284*tanS,336); ctx.closePath(); ctx.stroke(); }
+  // scala di profondità
+  ctx.fillStyle="#8b9ba8"; ctx.font="10px JetBrains Mono, monospace";
+  for(let mm=0;mm<=28;mm+=5){ const y=mm*SC; if(y>H) break; ctx.fillRect(W-8,y,6,1); if(mm>0) ctx.fillText(mm/10+"",W-30,y+3); }
+  ctx.fillText("cm",W-30,H-6);
+  // etichette
+  ctx.fillStyle="#dfe7ec"; ctx.font="600 13px Barlow Condensed, Arial Narrow, sans-serif";
+  ctx.fillText("CCA",40,178-RC-14); ctx.fillText("ICA",560,262); ctx.fillText("ECA",560,92);
+  // gate e cursore
+  const g=GATES[st.gate]; const V=g.v===0?V_CCA:(g.v===1?V_ICA:V_ECA);
+  const i=Math.min(V.p.length-1,g.s); const [x,y]=V.p[i]; const [tx,ty]=V.tg[i];
+  let gy=y; if(g.v===1&&st.N<100){const gg=icaRadii(g.s); const p=plaqueAt(g.s); gy=y+((gg.rf-p)-gg.rn)/2*1;}
+  const gx=x - (ty)*0;
+  const nxp=-ty, nyp=tx; const cx=x+nxp*(gy-y), cy=y+nyp*(gy-y);
+  ctx.strokeStyle="#f0c04a"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx-9,cy-6); ctx.lineTo(cx+9,cy-6); ctx.moveTo(cx-9,cy+6); ctx.lineTo(cx+9,cy+6); ctx.stroke();
+  ctx.setLineDash([4,4]); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(cx,cy-60); ctx.lineTo(cx,cy-8); ctx.stroke(); ctx.setLineDash([]);
+  const a=Math.atan2(ty,tx)+st.err*Math.PI/180;
+  ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(cx-Math.cos(a)*34,cy-Math.sin(a)*34); ctx.lineTo(cx+Math.cos(a)*34,cy+Math.sin(a)*34); ctx.stroke();
+}
+
+/* ---------- Doppler pulsato ---------- */
+const pw={cv:$("#pw"),x:0,scale:300,neg:0.2,clear:true}; pw.ctx=pw.cv.getContext("2d");
+function specColumn(ctx,x,h,base0,scale,neg,vTop,vBot,dens,extraNeg){
+  // vTop/vBot in cm/s; intensità con rumore
+  const pxPer=(h*(1-neg)-6)/scale; const y0=Math.round(h*(1-neg));
+  const R=Math.random;
+  const a=Math.min(vTop,vBot), b=Math.max(vTop,vBot);
+  for(let y=4;y<h-2;y++){
+    const v=(y0-y)/pxPer;
+    let I=0;
+    if(v>=a&&v<=b){ const t=(v-a)/((b-a)||1); I=dens*(0.5+0.5*Math.pow(t,0.6))*(0.55+R()*0.6); }
+    if(extraNeg && v<0 && v>-extraNeg && R()<0.12) I=Math.max(I,0.3*R());
+    if(I>0.05){ const c=Math.min(255,60+I*210); ctx.fillStyle=`rgb(${c},${c},${Math.min(255,c+8)})`; ctx.fillRect(x,y,1,1); }
+  }
+}
+function drawGrid(ctx,w,h,scale,neg,title){
+  ctx.fillStyle="#05080b"; ctx.fillRect(0,0,w,h);
+  const y0=Math.round(h*(1-neg)); const pxPer=(h*(1-neg)-6)/scale;
+  ctx.strokeStyle="#22303b"; ctx.lineWidth=1; ctx.fillStyle="#7d8d99"; ctx.font="10px JetBrains Mono, monospace";
+  const step=scale>300?100:(scale>120?50:25);
+  for(let v=-Math.floor(neg*h/pxPer/step)*step; v<=scale; v+=step){ const y=y0-v*pxPer; if(y<8||y>h-16) continue; ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(w-34,y+.5); ctx.stroke(); ctx.fillText(String(v),w-32,y+3); }
+  ctx.strokeStyle="#5b6b77"; ctx.beginPath(); ctx.moveTo(0,y0+.5); ctx.lineTo(w-34,y0+.5); ctx.stroke();
+  ctx.fillText("cm/s",w-32,h-4);
+}
+function pwStep(dt){
+  const ctx=pw.ctx, w=pw.cv.width, h=pw.cv.height;
+  if(pw.clear){ drawGrid(ctx,w,h,pw.scale,pw.neg); pw.x=0; pw.clear=false; }
+  const cols=Math.max(1,Math.round(dt*130));
+  const gf=gateFactors(); const af=angleFactor();
+  for(let c=0;c<cols;c++){
+    if(pw.x>=w-36){ pw.x=0; }
+    // cancella colonna davanti
+    ctx.fillStyle="#05080b"; ctx.fillRect(pw.x,0,6,h);
+    const y0=Math.round(h*(1-pw.neg)); const pxPer=(h*(1-pw.neg)-6)/pw.scale;
+    ctx.fillStyle="#22303b";
+    const ph=phaseAt();
+    if(!gf.none){
+      const r=refVals(gf.vessel); const mode = gf.dist&&r.mode==="normal"?"tardus":r.mode;
+      const s=shape(gf.vessel,ph,mode);
+      const ps=r.ps*gf.fs*beat.scale*af, ed=r.ed*gf.fd*(r.mode==="flat"?1:beat.scale)*af;
+      let v=ed+(ps-ed)*s;
+      if(gf.stump){ v = ph<0.2? ps*Math.sin(ph/0.2*Math.PI) : ed*Math.sin((ph-0.2)/0.8*Math.PI); }
+      let top=v, bot;
+      if(gf.turb||gf.jet&&st.N>=50){ bot= v>0? v*0.05 : v; }
+      else bot = v>0 ? v*0.72 : v*0.72;
+      if(gf.vessel==="ica"&&st.gate==="post"&&st.N>=50) bot=v*0.02;
+      specColumn(ctx,pw.x,h,y0,pw.scale,pw.neg,top,bot,0.95,(gf.turb&&st.N>=50)?Math.abs(v)*0.5:0);
+    }
+    ctx.fillStyle="#5b6b77"; ctx.fillRect(pw.x,y0,1,1);
+    ctx.fillStyle="#f0c04a"; ctx.fillRect(pw.x+2,4,2,h-8);
+    pw.x++;
+  }
+}
+
+/* ---------- loop ---------- */
+let last=performance.now();
+function frame(now){
+  let dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(st.play){
+    clock+=dt;
+    while(clock-beat.t0>=beat.rr){ beat.t0+=beat.rr; nextBeat(); }
+    drawBif(); pwStep(dt); vertStep(dt);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- comandi ---------- */
+function pressGroup(sel,attr,val){ document.querySelectorAll(sel+" button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset[attr]===String(val)))); }
+function rebuild(){ buildScene(); updateReadout(); if(!st.play) drawBif(); }
+$("#sten").addEventListener("input",e=>{st.N=+e.target.value; $("#stenOut").textContent=st.N>=100?"occlusione":st.N+"%"; rebuild();});
+$("#stenQuick").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; st.N=+b.dataset.n; $("#sten").value=st.N; $("#stenOut").textContent=st.N>=100?"occlusione":st.N+"%"; if(st.ptype==="web"&&st.N>0){st.ptype="het";pressGroup("#ptype","v","het");} rebuild();});
+$("#ptype").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; st.ptype=b.dataset.v; pressGroup("#ptype","v",st.ptype); rebuild();});
+$("#gate").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; st.gate=b.dataset.v; pressGroup("#gate","v",st.gate); updateReadout(); if(!st.play) drawBif();});
+$("#cond").addEventListener("change",e=>{st.cond=e.target.value; nextBeat(); updateReadout();});
+$("#ang").addEventListener("input",e=>{st.ang=+e.target.value; $("#angOut").textContent=st.ang+"°"; updateReadout(); if(!st.play) drawBif();});
+$("#err").addEventListener("input",e=>{st.err=+e.target.value; $("#errOut").textContent=(st.err>0?"+":"")+st.err+"°"; updateReadout(); if(!st.play) drawBif();});
+$("#nyq").addEventListener("input",e=>{st.nyq=+e.target.value; $("#nyqOut").textContent="±"+st.nyq+" cm/s"; updateReadout(); if(!st.play) drawBif();});
+function tog(id,key,after){ $(id).addEventListener("click",()=>{ st[key]=!st[key]; $(id).setAttribute("aria-pressed",String(st[key])); after&&after(); }); }
+tog("#tColor","color",()=>{ if(!st.play) drawBif(); });
+tog("#tRemod","remod",rebuild);
+tog("#tContra","contra",updateReadout);
+$("#tPlay").addEventListener("click",()=>{ st.play=!st.play; $("#tPlay").setAttribute("aria-pressed",String(st.play)); $("#tPlay").textContent=st.play?"Pausa":"Riprendi"; });
+
+/* ---------- atlante degli spettri (statico) ---------- */
+const SPEC=[
+  {t:"Carotide interna normale",k:"PSV 60-90 · EDV 20-35 cm/s",d:"Bassa resistenza: diastole ben rappresentata, finestra spettrale libera.",kind:"ica",mode:"normal",ps:75,ed:27},
+  {t:"Carotide esterna normale",k:"Alta resistenza",d:"Picco stretto, incisura, diastole bassa. Picchiettando la temporale vedi le oscillazioni.",kind:"eca",mode:"normal",ps:90,ed:9,tap:true},
+  {t:"Tardus-parvus bilaterale",k:"Stenosi aortica, bassa portata",d:"Salita lenta, picco basso e arrotondato in entrambe le comuni. Le stenosi carotidee vengono sottostimate.",kind:"cca",mode:"tardus",ps:55,ed:18},
+  {t:"Picco bifido",k:"Insufficienza aortica, CMI ostruttiva",d:"Due picchi sistolici. Nella CMI ostruttiva il secondo segue l'ostruzione mesosistolica.",kind:"cca",mode:"bisf",ps:100,ed:20},
+  {t:"Diastole invertita nella comune",k:"Insufficienza aortica severa",d:"Flusso olodiastolico retrogrado in entrambe le comuni. Segno specifico di rigurgito importante.",kind:"cca",mode:"bisf",ps:110,ed:-18},
+  {t:"Polso alternante",k:"Disfunzione ventricolare severa",d:"Picchi alternativamente alti e bassi con ritmo regolare.",kind:"cca",mode:"normal",ps:85,ed:20,alt:true},
+  {t:"Fibrillazione atriale",k:"RR irregolare",d:"Velocità diverse a ogni battito, più basse dopo un RR corto. Media 3-5 cicli.",kind:"ica",mode:"normal",ps:75,ed:25,af:true},
+  {t:"LVAD a flusso continuo",k:"Pulsatilità minima",d:"Flusso quasi continuo, piccole oscillazioni dovute alla contrazione residua. I criteri di velocità non valgono.",kind:"ica",mode:"flat",ps:55,ed:42},
+  {t:"Comune ad alta resistenza",k:"Occlusione dell'interna omolaterale",d:"Monolaterale: diastole quasi azzerata perché il letto a valle è chiuso. Bilaterale: ostruzione distale, ipertensione endocranica.",kind:"eca",mode:"normal",ps:80,ed:4},
+  {t:"Getto in stenosi severa",k:"PSV > 230 · EDV > 100 cm/s",d:"Velocità altissime, finestra spettrale riempita, diastole alta.",kind:"ica",mode:"normal",ps:330,ed:140,turb:true},
+  {t:"Interna distale a valle di stenosi critica",k:"Tardus-parvus monolaterale",d:"Salita lenta e velocità basse solo a valle della lesione: conferma che la stenosi a monte è emodinamica.",kind:"ica",mode:"tardus",ps:45,ed:20},
+];
+function drawStaticSpec(cv,o){
+  const ctx=cv.getContext("2d"), w=cv.width, h=cv.height;
+  const scale=o.scale||Math.ceil(Math.max(o.ps,Math.abs(o.ed))*1.25/25)*25; const neg=o.neg!==undefined?o.neg:(o.ed<0||o.turb?0.3:0.16);
+  drawGrid(ctx,w,h,scale,neg);
+  const y0=Math.round(h*(1-neg));
+  let t=0, b=0, rr=0.9, sc=1; const R=rng(11);
+  const ar=[0.62,1.05,0.5,0.95,0.7];
+  for(let x=0;x<w-36;x++){
+    const time=x/110;
+    while(time-t>=rr){ t+=rr; b++; if(o.af){rr=0.45+R()*0.7; sc=clamp(0.7+0.35*(ar[b%5]),0.65,1.1);} else if(o.alt){sc=b%2?0.66:1;} }
+    const ph=(time-t)/rr;
+    const s=shape(o.kind,ph,o.mode); const ed=o.ed*(o.mode==="flat"?1:sc), ps=o.ps*sc;
+    let v=o.fn?o.fn(ph):ed+(ps-ed)*s;
+    if(!o.fn && o.ed<0 && ph>0.3) v=ed*Math.sin(clamp((ph-0.3)/0.7,0,1)*Math.PI)*1.1;
+    if(o.tap && ph>0.4) v+=6*Math.sin(time*60);
+    const bot=o.turb? v*0.04 : v*0.72;
+    specColumn(ctx,x,h,y0,scale,neg,v,bot,0.95,o.turb?v*0.35:0);
+  }
+}
+const sa=$("#specAtlas");
+SPEC.forEach((o,i)=>{ const el=document.createElement("div"); el.className="tile"; el.innerHTML=`<canvas width="420" height="150" aria-label="${o.t}"></canvas><div class="b"><div class="k">${o.k}</div><h3>${o.t}</h3><p>${o.d}</p></div>`; sa.appendChild(el); drawStaticSpec(el.querySelector("canvas"),o); });
+
+/* ---------- galleria delle placche ---------- */
+const PLQ=[
+  {v:"hypo",t:"Ipoecogena",k:"Lipidi, emorragia, macrofagi",d:"Nera, simile al sangue: in B-mode si perde, il colore la disegna come difetto di riempimento. Caratteristica di vulnerabilità."},
+  {v:"hyper",t:"Iperecogena fibrosa",k:"Collagene",d:"Bianca, senza ombra. Caratteristica di stabilità."},
+  {v:"calc",t:"Calcifica",k:"Calcio, cono d'ombra",d:"Bianca con ombra posteriore: sotto non si vedono né parete né colore."},
+  {v:"het",t:"Disomogenea",k:"Componenti miste",d:"Aree nere e bianche alternate. Descrivi dimensione ed ecogenicità insieme."},
+  {v:"ulc",t:"Ulcerata",k:"Cratere in superficie",d:"Escavazione in cui il colore entra e gira. Fattore di rischio per ictus; si vede ruotando la sonda."},
+  {v:"web",t:"Carotid web",k:"Variante intimale della displasia fibromuscolare",d:"Membrana sottile a mensola dalla parete posteriore del bulbo. Dietro, ristagno e trombo. Pensaci nel giovane con ictus criptogenetico."},
+  {v:"thr",t:"Trombo anecogeno",k:"La trappola del lume nero",d:"In B-mode la comune sembra pervia. Al colore il flusso non c'è. Asse corto e colore sempre."},
+];
+let galColor=false;
+function drawPlaque(cv,v){
+  const ctx=cv.getContext("2d"), w=cv.width, h=cv.height; const img=ctx.createImageData(w,h), d=img.data; const R=rng(v.length*97+3);
+  const top=48, bot=118; const shadowFrom=new Int16Array(w).fill(9999);
+  const plq=x=>{ if(v==="thr"||v==="web") return 0; if(x<90||x>320) return 0; let p=34*Math.pow(Math.sin((x-90)/230*Math.PI),0.8); if(v==="ulc"&&x>185&&x<215) p*=0.45; return p; };
+  if(v==="calc"){ for(let x=0;x<w;x++){ const p=plq(x); if(p>1) shadowFrom[x]=Math.round(bot-p)+4; } }
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const k=(y*w+x)*4; let g, col=null; const n=R(); const p=plq(x);
+    const lumTop=top, lumBot=bot-p;
+    if(y>=lumTop&&y<lumBot){
+      g=6+n*10;
+      if(v==="thr"){ g=12+n*16; }
+      else if(galColor){
+        const q=(y-lumTop)/(lumBot-lumTop)*2-1; const prof=Math.max(0,1-0.85*q*q);
+        const narrow=(bot-top)/Math.max(8,lumBot-lumTop);
+        let f=prof*0.55*Math.min(2.4,narrow);
+        if(f>1) f=f-2; // aliasing nel getto
+        const pfull=(x>=90&&x<=320)?34*Math.pow(Math.sin((x-90)/230*Math.PI),0.8):0;
+        if(v==="ulc"&&x>186&&x<214&&y>bot-pfull-2){ const r=Math.hypot((x-200)/13,(y-(bot-pfull*0.75))/9); if(r<1.2) f=-0.5*Math.max(0.15,1-r*0.8); }
+        if(v==="web"&&x>203&&x<285){ const r=Math.hypot((x-238)/40,(y-(bot-11))/13); if(r<1) f=-0.42*Math.max(0.12,1-r); }
+        if(Math.abs(f)>0.06) col=dopColor(f,0.88+n*0.12);
+      }
+      if(v==="web"&&x>=196&&x<=202&&y>(top+bot)/2-6){ g=205+n*40; col=null; }
+    } else if(y>=lumBot&&y<bot&&p>0){
+      if(v==="hypo") g=20+n*28; else if(v==="hyper") g=150+n*60; else if(v==="calc") g=210+n*40;
+      else g=hetGray(x,y,n);
+    } else {
+      const dw=Math.min(Math.abs(y-top),Math.abs(y-bot));
+      if((y<top&&dw<9)||(y>=bot&&dw<9)) g= dw<2?150+n*40:(dw<4?60+n*30:170+n*55);
+      else { const layer=0.5+0.5*Math.sin(y*0.1+Math.sin(x*0.015)*2); g=38+layer*40+n*55; }
+    }
+    if(y>shadowFrom[x]) { g*=0.12; col=null; }
+    if(col){ d[k]=col[0]; d[k+1]=col[1]; d[k+2]=col[2]; } else { d[k]=g; d[k+1]=g; d[k+2]=g*1.02; }
+    d[k+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+}
+const pa=$("#plaqueAtlas");
+PLQ.forEach(o=>{ const el=document.createElement("div"); el.className="tile"; el.innerHTML=`<canvas width="420" height="170" aria-label="${o.t}"></canvas><div class="b"><div class="k">${o.k}</div><h3>${o.t}</h3><p>${o.d}</p></div>`; pa.appendChild(el); o.cv=el.querySelector("canvas"); drawPlaque(o.cv,o.v); });
+$("#gColor").addEventListener("click",()=>{ galColor=!galColor; $("#gColor").setAttribute("aria-pressed",String(galColor)); PLQ.forEach(o=>drawPlaque(o.cv,o.v)); });
+
+
+/* ---------- classificazione della placca ---------- */
+const GW=[
+  {n:"Tipo 1",d:"Uniformemente ipoecogena",h:"Solo un sottile cappuccio ecogeno. Nucleo lipidico, emorragia.",art:'<use href="#gwPl" fill="#0d0d0d"/><use href="#gwCap" stroke="#d0d0d0" stroke-width="2.6"/>'},
+  {n:"Tipo 2",d:"Prevalentemente ipoecogena",h:"Aree ecogene sotto il 50%. Lipidi con poco tessuto fibroso.",art:'<use href="#gwPl" fill="#141414"/><g clip-path="url(#gwClip)"><ellipse cx="128" cy="122" rx="22" ry="10" fill="#9a9a9a"/><ellipse cx="185" cy="132" rx="16" ry="8" fill="#8a8a8a"/><ellipse cx="160" cy="104" rx="12" ry="6" fill="#a6a6a6"/><use href="#gwPl" filter="url(#gwFine)" opacity=".5"/></g><use href="#gwCap" stroke="#c8c8c8" stroke-width="2.4"/>'},
+  {n:"Tipo 3",d:"Prevalentemente ecogena",h:"Aree ipoecogene sotto il 50%. Fibrosa con piccoli laghi lipidici.",art:'<use href="#gwPl" fill="#a9a9a9"/><g clip-path="url(#gwClip)"><ellipse cx="140" cy="120" rx="24" ry="11" fill="#1a1a1a"/><ellipse cx="195" cy="134" rx="13" ry="7" fill="#252525"/><use href="#gwPl" filter="url(#gwFine)" opacity=".55"/></g><use href="#gwCap" stroke="#e2e2e2" stroke-width="2.4"/>'},
+  {n:"Tipo 4",d:"Uniformemente ecogena",h:"Omogenea e brillante. Tessuto fibroso, collagene.",art:'<use href="#gwPl" fill="#c6c6c6"/><g clip-path="url(#gwClip)"><use href="#gwPl" filter="url(#gwFine)" opacity=".45"/></g><use href="#gwCap" stroke="#ececec" stroke-width="2.4"/>'},
+  {n:"Tipo 5",d:"Non classificabile",h:"Superficie calcifica con cono d'ombra: il contenuto non si vede.",art:'<path d="M70 122 L 230 122 L 262 200 L 44 200 Z" fill="#000" opacity=".9"/><use href="#gwPl" fill="#0a0a0a"/><use href="#gwCap" stroke="#f4f4f4" stroke-width="7"/>'},
+];
+const SURF=[
+  {n:"Liscia",h:"Cappuccio brillante continuo.",art:'<path d="M40 147 C 95 140, 120 98, 150 96 C 185 94, 210 138, 252 147 Z" fill="#8c8c8c"/><path d="M40 147 C 95 140, 120 98, 150 96 C 185 94, 210 138, 252 147" stroke="#e8e8e8" stroke-width="3" fill="none"/>'},
+  {n:"Irregolare",h:"Profilo ondulato, cappuccio interrotto.",art:'<path d="M40 147 L 64 140 L 80 126 L 92 130 L 106 110 L 120 114 L 132 100 L 146 107 L 160 96 L 174 108 L 190 104 L 204 120 L 218 118 L 232 134 L 252 147 Z" fill="#8c8c8c"/><path d="M40 147 L 64 140 L 80 126 L 92 130 L 106 110 L 120 114 L 132 100 L 146 107 L 160 96 L 174 108 L 190 104 L 204 120 L 218 118 L 232 134 L 252 147" stroke="#e0e0e0" stroke-width="2.4" fill="none" stroke-linejoin="round"/>'},
+  {n:"Ulcerata",h:"Cratere, spesso definito da almeno 2 mm di profondità, con colore che entra e gira.",art:'<path d="M48 82 L 290 82" stroke="#c43c2e" stroke-width="22" opacity=".85"/><path d="M48 82 L 290 82" stroke="#e86a4a" stroke-width="8" opacity=".9"/><path d="M40 147 C 85 140, 104 102, 128 98 L 138 98 C 140 114, 146 126, 158 127 C 170 128, 176 114, 178 98 L 188 97 C 218 98, 236 136, 252 147 Z" fill="#8c8c8c"/><path d="M40 147 C 85 140, 104 102, 128 98 L 138 98 C 140 114, 146 126, 158 127 C 170 128, 176 114, 178 98 L 188 97 C 218 98, 236 136, 252 147" stroke="#e0e0e0" stroke-width="2.4" fill="none"/><path d="M142 102 C 144 117, 150 122, 158 122 C 166 122, 172 116, 174 102 Z" fill="#2f63c9"/><path d="M150 110 C 154 116, 162 116, 166 109" stroke="#56c8e8" stroke-width="3" fill="none"/>'},
+];
+const gwTile=(o)=>`<div class="gwt"><svg viewBox="0 0 290 200" role="img" aria-label="${o.n}: ${o.d||o.h}"><use href="#gwField"/>${o.art}</svg><div class="b"><div class="n">${o.n}</div>${o.d?`<div class="d">${o.d}</div>`:""}<div class="h">${o.h}</div></div></div>`;
+$("#gwGrid").innerHTML=GW.map(gwTile).join("");
+$("#gwSurf").innerHTML=SURF.map(gwTile).join("")+`<div class="report"><b>Cosa scrivere nel referto</b><ul><li>Sede e lato</li><li>Spessore massimo in mm</li><li>Ecogenicità, tipo 1-5</li><li>Omogenea o disomogenea</li><li>Superficie: liscia, irregolare, ulcerata</li><li>Area ipoecogena a contatto col lume (area nera iuxtaluminale)</li></ul></div>`;
+/* ---------- calcolatore NASCET / ECST ---------- */
+function calc(){
+  const res=+$("#cRes").value, ica=+$("#cIca").value, bulb=+$("#cBulb").value;
+  const ok=res>=0&&ica>0&&bulb>0;
+  const N=ok?clamp((1-res/ica)*100,0,100):NaN, E=ok?clamp((1-res/bulb)*100,0,100):NaN;
+  const Ar=ok?clamp((1-Math.pow(res/bulb,2))*100,0,100):NaN;
+  const RI2=ok?Math.pow(bulb/ica,2):NaN; const Eexp=0.6*N+40;
+  $("#oN").textContent=isFinite(N)?Math.round(N)+"%":"–";
+  $("#oE").textContent=isFinite(E)?Math.round(E)+"%":"–";
+  $("#oR").textContent=isFinite(RI2)?fmt(RI2,1):"–";
+  $("#oA").textContent=isFinite(Ar)?Math.round(Ar)+"%":"–";
+  const diff=E-Eexp;
+  let msg;
+  if(!ok) msg="Inserisci valori positivi.";
+  else if(res>ica) msg="<b>Lume residuo più largo dell'interna distale.</b> Controlla le misure: col NASCET la stenosi sarebbe negativa.";
+  else if(diff>8) msg=`<b>ECST più alto dell'atteso (${Math.round(Eexp)}%).</b> Il bulbo è più largo del solito: rimodellamento positivo. La velocità seguirà il NASCET (${Math.round(N)}%), mentre la placca è grande. Nel referto: grado NASCET più spessore e area della placca.`;
+  else if(diff<-8) msg=`<b>ECST più basso dell'atteso (${Math.round(Eexp)}%).</b> Bulbo poco sviluppato o misura dell'interna distale troppo piccola (vaso a valle collassato in una pre-occlusione?).`;
+  else msg=`<b>Metodi coerenti.</b> ECST in linea con la conversione di Rothwell (${Math.round(Eexp)}%). Lo scarto con la stenosi per area (${Math.round(Ar)}%) nasce dal passaggio da diametri ad aree, non da un bulbo anomalo.`;
+  $("#cVerdict").innerHTML=msg;
+  const cls=isFinite(N)?(N>=70?"≥ 70%":(N>=50?"50-69%":"< 50%")):"–";
+  $("#cRows").innerHTML=`<tr><td>Classe NASCET, quella che segue la velocità</td><td class="v">${cls}</td></tr><tr><td>Stenosi per area nel bulbo</td><td class="v">${isFinite(Ar)?Math.round(Ar)+"%":"–"}</td></tr><tr><td>ECST attesa dalla conversione</td><td class="v">${isFinite(Eexp)?Math.round(Eexp)+"%":"–"}</td></tr><tr><td>Bulbo / interna distale, diametro</td><td class="v">${ok?fmt(bulb/ica,2):"–"}</td></tr>`;
+  // schema
+  const cv=$("#calcCv"), ctx=cv.getContext("2d"), w=cv.width, h=cv.height;
+  ctx.fillStyle="#05080b"; ctx.fillRect(0,0,w,h);
+  if(!ok) return;
+  const sc=Math.min(14,150/Math.max(bulb,ica,0.1)); const cy=h/2;
+  const xs=[30,170,260,340,530];
+  const half=x=>{ if(x<xs[1]) return ica*1.4*sc/2; if(x<xs[2]) return lerp(ica*1.4,bulb,(x-xs[1])/(xs[2]-xs[1]))*sc/2; if(x<xs[3]) return bulb*sc/2; if(x<420) return lerp(bulb,ica,(x-xs[3])/80)*sc/2; return ica*sc/2; };
+  ctx.strokeStyle="#9fb0bc"; ctx.lineWidth=2; ctx.beginPath(); for(let x=xs[0];x<=xs[4];x++) ctx.lineTo(x,cy-half(x)); ctx.stroke(); ctx.beginPath(); for(let x=xs[0];x<=xs[4];x++) ctx.lineTo(x,cy+half(x)); ctx.stroke();
+  // placca nel bulbo
+  const bx=(xs[2]+xs[3])/2; ctx.fillStyle="#6a5a3a";
+  ctx.beginPath(); ctx.moveTo(xs[2]-30,cy+half(xs[2]-30)); for(let x=xs[2]-30;x<=xs[3]+50;x++){ const t=(x-(xs[2]-30))/(xs[3]+80-xs[2]); const top=cy+half(bx)-(half(bx)*2-res*sc)*Math.pow(Math.sin(t*Math.PI),1.2); ctx.lineTo(x,Math.min(cy+half(x),top)); } ctx.lineTo(xs[3]+50,cy+half(xs[3]+50)); ctx.closePath(); ctx.fill();
+  ctx.font="12px JetBrains Mono, monospace";
+  const arrow=(x,y1,y2,col,lab)=>{ ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke(); ctx.fillRect(x-4,y1-1,8,2); ctx.fillRect(x-4,y2-1,8,2); ctx.fillText(lab,x+6,(y1+y2)/2+4); };
+  const ytop=cy-half(bx), yres=ytop+res*sc;
+  arrow(bx,ytop,yres,"#f0c04a","A "+fmt(res,1));
+  arrow(bx-48,cy-half(bx),cy+half(bx),"#e3a43c","B "+fmt(bulb,1));
+  arrow(470,cy-half(470),cy+half(470),"#6fbf8e","C "+fmt(ica,1));
+  ctx.fillStyle="#8b9ba8"; ctx.fillText("NASCET = 1 − A/C   ECST = 1 − A/B",20,h-12);
+}
+["#cRes","#cIca","#cBulb"].forEach(id=>$(id).addEventListener("input",calc));
+
+/* ---------- vertebrale ---------- */
+const vt={cv:$("#vert"),x:0,stage:1,cuff:0,clear:true,t0:0,rr:0.92,clock:0}; vt.ctx=vt.cv.getContext("2d");
+const VTXT=["<b>Normale.</b> Flusso ortogrado a bassa resistenza, PSV circa 40-60 cm/s.","<b>Stadio I, furto latente.</b> Decelerazione mesosistolica: l'incisura appare a metà sistole, il flusso resta ortogrado.","<b>Stadio II, furto parziale.</b> Flusso bidirezionale: in sistole si inverte, in diastole torna verso la testa.","<b>Stadio III, furto completo.</b> Flusso interamente invertito, verso il braccio."];
+function vertV(stage,ph){
+  const s=shape("ica",ph,"normal"); let v=15+(50-15)*s;
+  if(stage===1){ v-= 32*Math.exp(-Math.pow((ph-0.17)/0.05,2)); }
+  if(stage===2){ if(ph<0.34) v = 14-60*Math.sin(clamp((ph-0.05)/0.29,0,1)*Math.PI)*0.9; else v = 14*(1-(ph-0.34)/0.66)+4; }
+  if(stage===3){ v=-(14+(45-14)*s); }
+  return v;
+}
+function vertStep(dt){
+  const ctx=vt.ctx, w=vt.cv.width, h=vt.cv.height, neg=0.45, scale=70;
+  if(vt.clear){ drawGrid(ctx,w,h,scale,neg); vt.x=0; vt.clear=false; }
+  vt.clock+=dt; if(vt.cuff>0){ vt.cuff-=dt; if(vt.cuff<=0){ vt.cuff=0; $("#vCuff").setAttribute("aria-pressed","false"); updVert(); } }
+  const stg=Math.min(3,vt.stage+(vt.cuff>0?1:0));
+  const cols=Math.max(1,Math.round(dt*130)); const y0=Math.round(h*(1-neg));
+  for(let c=0;c<cols;c++){
+    if(vt.x>=w-36) vt.x=0;
+    ctx.fillStyle="#05080b"; ctx.fillRect(vt.x,0,6,h);
+    while(vt.clock-vt.t0>=vt.rr) vt.t0+=vt.rr;
+    const ph=clamp((vt.clock-vt.t0)/vt.rr,0,0.999);
+    const v=vertV(stg,ph);
+    specColumn(ctx,vt.x,h,y0,scale,neg,v,v*0.7,0.95,0);
+    ctx.fillStyle="#5b6b77"; ctx.fillRect(vt.x,y0,1,1);
+    ctx.fillStyle="#f0c04a"; ctx.fillRect(vt.x+2,4,2,h-8);
+    vt.x++;
+  }
+}
+function updVert(){ const stg=Math.min(3,vt.stage+(vt.cuff>0?1:0)); $("#vText").innerHTML=VTXT[stg]+(vt.cuff>0?" <span class='chip c-mid'>iperemia in corso</span>":""); $("#vLab").textContent=["ortograda","incisura sistolica","bidirezionale","invertita"][stg]; }
+$("#vStage").addEventListener("click",e=>{const b=e.target.closest("button"); if(!b) return; vt.stage=+b.dataset.v; pressGroup("#vStage","v",vt.stage); updVert();});
+$("#vCuff").addEventListener("click",()=>{ vt.cuff=8; $("#vCuff").setAttribute("aria-pressed","true"); updVert(); });
+
+/* ---------- casi ---------- */
+const CASES=[
+  {img:{bif:{N:60,ptype:"het",gate:"th"},hud:"ICA destra · color e PW nel getto",spec:{kind:"ica",mode:"normal",ps:210,ed:70,turb:true},lab:"PSV 210 · EDV 70 cm/s",cap:"Placca disomogenea all'origine della ICA con getto e aliasing. Immagine schematica dal simulatore."},q:"Uomo di 72 anni, asintomatico. Interna destra con placca disomogenea all'origine.",vals:"PSV 210 cm/s · EDV 70 cm/s · rapporto ICA/CCA 3,1",o:["Stenosi < 50%","Stenosi 50-69%","Stenosi ≥ 70%"],a:1,e:"Con i criteri SRU è 50-69%: PSV tra 125 e 230, rapporto tra 2 e 4, EDV tra 40 e 100. Anche con la proposta IAC resta ≥ 50%, perché la PSV supera 180."},
+  {img:{bif:{N:62,ptype:"hypo",cond:"as",gate:"th"},hud:"ICA sinistra · stenosi aortica severa",spec:{kind:"cca",mode:"tardus",ps:58,ed:18},lab:"CCA: tardus-parvus, uguale nei due lati",cap:"Placca ipoecogena estesa; sotto, lo spettro della comune con salita lenta e picco basso. Immagine schematica."},q:"Donna di 81 anni con stenosi aortica severa. Placca estesa del bulbo sinistro che in trasversale riduce molto il lume.",vals:"PSV 115 cm/s · onda tardus-parvus in entrambe le comuni",o:["Stenosi < 50%, rassicuro","Le velocità sottostimano: descrivo la placca e chiedo un secondo imaging","Stenosi ≥ 70% per definizione"],a:1,e:"La stenosi aortica abbassa e ritarda il picco in tutto il circolo: le soglie di velocità non sono applicabili. Descrivi la morfologia e conferma con angio-TC o angio-RM se serve decidere."},
+  {img:{bif:{N:60,ptype:"het",contra:true,gate:"th"},hud:"ICA destra · ICA sinistra occlusa",spec:{kind:"ica",mode:"normal",ps:260,ed:85,turb:true},lab:"PSV 260 · EDV 85 · ICA/CCA 2,6",cap:"Stenosi moderata che sembra severa per il flusso di compenso. Immagine schematica."},q:"Uomo di 68 anni con occlusione nota dell'interna sinistra. Valuti la destra.",vals:"PSV 260 cm/s · EDV 85 cm/s · rapporto ICA/CCA 2,6",o:["Stenosi ≥ 70%: la PSV supera 230","Probabile 50-69%: le velocità sono gonfiate dal circolo di compenso","Normale"],a:1,e:"Con un'occlusione controlaterale il lato in esame porta più flusso e sovrastima. Rapporto e EDV, più coerenti con 50-69%, pesano di più. Scrivilo nel referto."},
+  {img:{bif:{N:0,ptype:"web",gate:"th"},hud:"ICA sinistra · bulbo",spec:{kind:"ica",mode:"normal",ps:80,ed:28},lab:"PSV 80 · EDV 28 cm/s",cap:"Membrana sulla parete posteriore del bulbo con ristagno e flusso invertito a valle. Immagine schematica."},q:"Donna di 38 anni con ictus criptogenetico. Sottile struttura lineare che sporge dalla parete posteriore del bulbo, senza aumento di velocità.",vals:"PSV 80 cm/s · nessuna placca aterosclerotica altrove",o:["Artefatto, chiudo l'esame","Carotid web","Dissezione"],a:1,e:"Membrana a mensola sulla parete posteriore del bulbo in una giovane: è il quadro del web carotideo, variante intimale della displasia fibromuscolare. Il rischio è embolico da ristagno, non emodinamico."},
+  {img:{spec:{kind:"ica",mode:"normal",ps:50,ed:15,scale:70,neg:0.45,fn:ph=>vertV(2,ph)},lab:"Vertebrale sinistra, V2: flusso bidirezionale",cap:"Spettro della vertebrale: in sistole il flusso si inverte, in diastole torna verso la testa. Immagine schematica."},q:"Uomo di 65 anni, fumatore. Pressione al braccio sinistro 30 mmHg più bassa che al destro.",vals:"Vertebrale sinistra: flusso che si inverte in sistole e torna ortogrado in diastole",o:["Stenosi della vertebrale sinistra","Furto della succlavia sinistra, stadio II","Vertebrale ipoplasica"],a:1,e:"Flusso bidirezionale nella vertebrale con differenza pressoria tra le braccia: furto parziale da stenosi prossimale della succlavia. Il test di iperemia lo accentua fino all'inversione completa."},
+  {img:{bif:{N:0,ptype:"hyper",gate:"pre"},stent:true,hud:"ICA destra · stent a un mese",spec:{kind:"ica",mode:"normal",ps:160,ed:45},lab:"PSV intrastent 160 · EDV 45 cm/s",cap:"Maglia dello stent dalla comune all'interna, lume libero. Immagine schematica, lo stent è disegnato sopra il simulatore."},q:"Stent nell'interna destra posizionato un mese fa. Primo controllo.",vals:"PSV intrastent 160 cm/s · nessuna placca visibile",o:["Restenosi ≥ 50% con i criteri nativi: allerto il chirurgo","Restenosi lieve 30-49% con i criteri dedicati: è il valore di riferimento","Occlusione imminente"],a:1,e:"Nello stent le velocità sono più alte per la rigidità. Con la tabella della lezione 160 cm/s è 30-50%, con AbuRahma 2008 è ≥ 30% e sotto 224. Questa ecografia diventa la base per i controlli."},
+  {img:{bif:{N:40,ptype:"hypo",remod:true,gate:"th"},hud:"ICA destra · bulbo dilatato",spec:{kind:"ica",mode:"normal",ps:118,ed:32},lab:"PSV 118 · EDV 32 cm/s",cap:"Placca grande in un bulbo dilatato, senza getto: rimodellamento positivo. Immagine schematica."},q:"Uomo di 69 anni. Placca ipoecogena che occupa gran parte di un bulbo molto ampio.",vals:"PSV 118 cm/s · stenosi per aree circa 85% · area bulbo 0,5 cm², interna distale 0,2 cm²",o:["Stenosi severa: 85%","Stenosi < 50% NASCET con grande carico di placca da rimodellamento positivo","Errore di misura, ripeto l'esame"],a:1,e:"La velocità segue il lume rispetto all'interna distale, cioè il NASCET. Il bulbo dilatato nasconde una placca grande. È il caso MG della lezione: grado NASCET più descrizione della placca."},
+  {img:{tile:"thr",hud:"CCA sinistra · color acceso, scala 20 cm/s",cap:"Sopra con il color Doppler acceso, sotto in B-mode: il lume è nero in entrambi e il colore non compare. Immagine schematica."},q:"Uomo di 74 anni inviato per vertigini. In longitudinale la carotide comune sinistra ha un lume nero e un calibro anzi ampio.",vals:"B-mode apparentemente normale · nessun segnale colore",o:["Nessuna malattia","Trombosi anecogena della carotide comune","Errore di settaggio del colore"],a:1,e:"Il trombo fresco ha la stessa ecogenicità del sangue. Lume nero non vuol dire pervio. Controlla i settaggi (scala bassa, power Doppler), poi conferma in asse corto: nella lezione due operatori arrivano a conclusioni opposte proprio così."},
+];
+let answered=0, correct=0;
+const cg=$("#caseGrid");
+CASES.forEach((c,i)=>{
+  const el=document.createElement("div"); el.className="case";
+  el.innerHTML=`<div class="eyebrow">Caso ${i+1}</div><p>${c.q}</p><figure class="caseimg"><canvas width="640" height="${c.img.bif||c.img.tile?520:200}" aria-label="Immagine schematica del caso ${i+1}"></canvas><figcaption>${c.img.cap}</figcaption></figure><div class="vals">${c.vals}</div><div class="opts">${c.o.map((t,j)=>`<button type="button" data-j="${j}">${t}</button>`).join("")}</div><div class="fb" hidden></div>`;
+  el.querySelector(".opts").addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b||el.dataset.done) return; el.dataset.done="1";
+    const j=+b.dataset.j; const btns=el.querySelectorAll(".opts button");
+    btns[c.a].classList.add("right"); if(j!==c.a) b.classList.add("wrong");
+    answered++; if(j===c.a) correct++;
+    const fb=el.querySelector(".fb"); fb.hidden=false; fb.innerHTML=(j===c.a?"<b style='color:var(--ok)'>Giusto.</b> ":"<b style='color:var(--sev)'>Non proprio.</b> ")+c.e;
+    $("#score").textContent=`Punteggio ${correct}/${answered}`;
+  });
+  cg.appendChild(el);
+  c.cv=el.querySelector("canvas");
+});
+
+/* ---------- avvio ---------- */
+nextBeat();
+/* ---------- immagini dei casi, generate dal simulatore ---------- */
+function stentOverlay(ctx){
+  ctx.save(); ctx.strokeStyle="rgba(235,235,235,.9)"; ctx.lineWidth=2;
+  const pts=[]; for(let s=8;s<=150;s+=2){ const [x,y]=V_ICA.p[s],[tx,ty]=V_ICA.tg[s]; const g=icaRadii(s); pts.push({x,y,nx:-ty,ny:tx,rn:g.rn,rf:g.rf}); }
+  for(const side of [-1,1]){ ctx.beginPath(); pts.forEach((p,i)=>{ const r=side<0?p.rn:p.rf; const X=p.x+p.nx*side*r, Y=p.y+p.ny*side*r; i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }); ctx.stroke(); }
+  ctx.lineWidth=1.3; ctx.beginPath();
+  const near=p=>[p.x-p.nx*p.rn,p.y-p.ny*p.rn], far=p=>[p.x+p.nx*p.rf,p.y+p.ny*p.rf];
+  for(let i=0;i+7<pts.length;i+=7){ const p=pts[i], q=pts[i+7]; let A=near(p),B=far(q); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); A=far(p); B=near(q); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); }
+  ctx.stroke(); ctx.restore();
+}
+function labelSpec(ctx,y0,txt){ ctx.fillStyle="rgba(5,8,11,.75)"; ctx.fillRect(8,y0+6,ctx.measureText(txt).width+18,24); ctx.fillStyle="#f0c04a"; ctx.font="600 13px JetBrains Mono, monospace"; ctx.fillText(txt,16,y0+23); }
+function caseImages(){
+  const save=JSON.stringify(st); const saveBeat={...beat}; const saveClock=clock; const saveGal=galColor;
+  CASES.forEach(c=>{
+    const im=c.img, ctx=c.cv.getContext("2d"); ctx.fillStyle="#05080b"; ctx.fillRect(0,0,c.cv.width,c.cv.height);
+    let yS=0;
+    if(im.bif){
+      Object.assign(st,{N:0,ptype:"het",cond:"normal",gate:"th",ang:60,err:0,nyq:50,color:true,remod:false,contra:false},im.bif);
+      buildScene(); beat.rr=0.92; beat.scale=1; clock=10; beat.t0=clock-0.09*beat.rr;
+      drawBif(); ctx.drawImage(bif.cv,0,0,640,380);
+      if(im.stent) stentOverlay(ctx);
+      ctx.fillStyle="#9fb0bc"; ctx.font="11px JetBrains Mono, monospace"; ctx.fillText(im.hud||"",10,16);
+      yS=382;
+    } else if(im.tile){
+      galColor=true; const t=document.createElement("canvas"); t.width=420; t.height=170; drawPlaque(t,im.tile);
+      ctx.drawImage(t,0,0,640,259); ctx.fillStyle="#9fb0bc"; ctx.font="11px JetBrains Mono, monospace"; ctx.fillText(im.hud||"",10,16);
+      galColor=saveGal;
+      // seconda metà: stesso piano in B-mode puro
+      const t2=document.createElement("canvas"); t2.width=420; t2.height=170; drawPlaque(t2,im.tile);
+      ctx.drawImage(t2,0,261,640,259); ctx.fillStyle="#9fb0bc"; ctx.fillText("B-mode senza colore",10,278);
+      return;
+    }
+    if(im.spec){
+      const sc=document.createElement("canvas"); sc.width=640; sc.height=im.bif?138:200; drawStaticSpec(sc,im.spec);
+      ctx.drawImage(sc,0,yS); ctx.font="600 13px JetBrains Mono, monospace"; labelSpec(ctx,yS,im.lab||"");
+    }
+  });
+  Object.assign(st,JSON.parse(save)); Object.assign(beat,saveBeat); clock=saveClock; galColor=saveGal;
+}
+caseImages();
+buildScene(); updateReadout(); calc(); updVert(); drawBif();
+if(reduced){ st.play=false; $("#tPlay").setAttribute("aria-pressed","false"); $("#tPlay").textContent="Riprendi"; for(let i=0;i<40;i++){clock+=0.05; while(clock-beat.t0>=beat.rr){beat.t0+=beat.rr;nextBeat();} pwStep(0.05); vertStep(0.05);} drawBif(); }
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
